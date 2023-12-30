@@ -1,0 +1,22 @@
+body {
+    background-color: black;
+    text-align: center;
+    overflow: hidden;
+    margin: 0;
+}
+
+h1 {
+    color: white;
+    font-family: Arial;
+}
+
+#myCanvas {
+    background-color: #2a5;
+}
+
+#controls {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+}
