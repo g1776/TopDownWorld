@@ -1,9 +1,3 @@
----
-runme:
-  id: 01HJQ9VTTBAKRVK9HXKRXF4WZY
-  version: v2.0
----
-
 # World Editor
 
 Gregory Glatzer
