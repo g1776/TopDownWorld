@@ -14,7 +14,7 @@ class Viewport {
 	constructor(public canvas: HTMLCanvasElement) {
 		this.ctx = canvas.getContext("2d")!;
 
-		this.zoom = 1;
+		this.zoom = Settings.EDITOR_DEFAULT_ZOOM;
 		this.center = new Point(canvas.width / 2, canvas.height / 2);
 		this.offset = scale(this.center, -1);
 		this.drag = {

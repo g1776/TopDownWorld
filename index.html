@@ -6,11 +6,18 @@
         <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     </head>
     <body>
-        <canvas id="myCanvas"></canvas>
         <div id="controls">
             <button onclick="dispose()">🗑️</button>
             <button onclick="save()">💾</button>
+            <form id="mode-form">
+                <div class="button-group">
+                    <button id="graphBtn" onclick="setMode('graph')">🌐</button>
+                    <button id="stopBtn" onclick="setMode('stop')">🛑</button>
+                </div>
+            </form>
         </div>
+        <canvas id="myCanvas"></canvas>
+        
 
         <script src="dist/settings.js"></script>
         <script src="dist/graphEditor.js"></script>

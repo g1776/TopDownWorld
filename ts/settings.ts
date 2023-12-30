@@ -2,6 +2,13 @@ class Settings {
 	// Program settings
 	public static readonly DEBUG: boolean = false;
 
+	// Editor settings
+
+	/**
+	 * The default zoom level for the editor. Higher values are less zoomed in.
+	 */
+	public static readonly EDITOR_DEFAULT_ZOOM: number = 2;
+
 	// Road settings
 	public static readonly ROAD_WIDTH: number = 100;
 	public static readonly ROAD_ROUNDNESS: number = 30;
@@ -21,4 +28,6 @@ class Settings {
 	public static readonly BUILDING_SPACING: number = 100;
 	public static readonly BUILDING_HEIGHT: number = 0.1;
 	public static readonly BUILDING_ROOF_HEIGHT: number = 0.05;
+	public static readonly BUILDING_COLOR: string = "#e8e1cf";
+	public static readonly BUILDING_ROOF_COLOR: string = "#a84a32";
 }

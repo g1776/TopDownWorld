@@ -106,6 +106,11 @@ class GraphEditor {
 	}
 
 	dispose() {
+		// prompt user that they are about to lose their progress
+		const response = confirm(
+			"Are you sure you want to clear? Any unsaved progress will be lost."
+		);
+		if (!response) return;
 		this.graph.dispose();
 		this.selected = null;
 		this.hovered = null;

@@ -20,27 +20,14 @@ class Building implements Item {
 		}
 
 		// Sort the sides by distance to the camera.
+		this.base.draw(ctx, { fill: Settings.BUILDING_COLOR, stroke: "#AAA" });
 		sides.sort((a, b) => b.distanceToPoint(viewPoint) - a.distanceToPoint(viewPoint));
-
-		this.base.draw(ctx, { fill: "white", stroke: "#AAA" });
-		sides.forEach((side) => side.draw(ctx, { fill: "white", stroke: "#AAA" }));
+		sides.forEach((side) => side.draw(ctx, { fill: Settings.BUILDING_COLOR, stroke: "#AAA" }));
 		this.drawRoof(ctx, viewPoint);
 	}
 
 	private drawRoof(ctx: CanvasRenderingContext2D, viewPoint: Point) {
-		type RoofColor = {
-			shingles: string;
-			side: string;
-		};
-
-		const roofColors: RoofColor[] = [
-			{ shingles: "#a84a32", side: "#fcf3d7" },
-			{ shingles: "#777eb5", side: "#fcf3d7" },
-			{ shingles: "#3e7040", side: "#fcf3d7" },
-			{ shingles: "#9c6802", side: "#fcf3d7" },
-		];
-
-		const ceilingPoints = this.base.points.map((p) =>
+		const ceiling = this.base.points.map((p) =>
 			getPointOnZPlane(p, viewPoint, this.heightCoef)
 		);
 
@@ -65,58 +52,22 @@ class Building implements Item {
 		const roofTopPoint1 = roofPoints[0];
 		const roofTopPoint2 = roofPoints[3];
 
-		const roofElements: {
-			poly: Polygon;
-			type: "side" | "shingles";
-		}[] = [
-			// shingle tops
-			{
-				poly: new Polygon([
-					ceilingPoints[0],
-					ceilingPoints[1],
-					roofTopPoint2,
-					roofTopPoint1,
-				]),
-				type: "shingles",
-			},
-			{
-				poly: new Polygon([
-					ceilingPoints[2],
-					ceilingPoints[3],
-					roofTopPoint1,
-					roofTopPoint2,
-				]),
-				type: "shingles",
-			},
-			// triangle sides
-			{
-				poly: new Polygon([ceilingPoints[0], roofTopPoint1, ceilingPoints[3]]),
-				type: "side",
-			},
-			{
-				poly: new Polygon([ceilingPoints[1], roofTopPoint2, ceilingPoints[2]]),
-				type: "side",
-			},
+		const roofPolys = [
+			new Polygon([ceiling[0], ceiling[1], roofTopPoint2, roofTopPoint1]),
+			new Polygon([ceiling[2], ceiling[3], roofTopPoint1, roofTopPoint2]),
 		];
+		roofPolys.sort((a, b) => b.distanceToPoint(viewPoint) - a.distanceToPoint(viewPoint));
 
-		roofElements.sort(
-			(a, b) => b.poly.distanceToPoint(viewPoint) - a.poly.distanceToPoint(viewPoint)
-		);
-
-		// choose a random color palette for the roof
-		const kindOfRandom = Math.pow(Math.cos((roofTopPoint1.x * roofTopPoint2.y) % 17), 2);
-		const randomColor = roofColors[Math.floor(kindOfRandom * roofColors.length)];
-
-		// we're not really drawing the side here, but rather the ceiling with the color of the side. It's a hack, but it works with our
-		// fairly limited perspective.
-		new Polygon(ceilingPoints).draw(ctx, { fill: randomColor.side, stroke: "#AAA" });
-		roofElements.forEach((roof) => {
-			if (roof.type === "shingles") {
-				roof.poly.draw(ctx, {
-					fill: randomColor.shingles,
-					stroke: "#AAA",
-				});
-			}
+		// Draw the ceiling, but it will appear as the
+		new Polygon(ceiling).draw(ctx, {
+			fill: Settings.BUILDING_COLOR,
+			stroke: Settings.BUILDING_COLOR,
+		});
+		roofPolys.forEach((poly) => {
+			poly.draw(ctx, {
+				fill: Settings.BUILDING_ROOF_COLOR,
+				stroke: "#AAA",
+			});
 		});
 	}
 }
