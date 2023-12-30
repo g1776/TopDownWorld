@@ -17,6 +17,7 @@ const graph = graphData ? Graph.load(graphData) : new Graph([p1, p2], [s1]);
 const world = new World(graph);
 const viewport = new Viewport(myCanvas);
 const graphEditor = new GraphEditor(viewport, graph);
+const controls = new Controls(graphEditor);
 
 let oldGraphHash = graph.hash();
 animate();
@@ -33,12 +34,4 @@ function animate() {
 	ctx.globalAlpha = 0.3;
 	graphEditor.display();
 	requestAnimationFrame(animate);
-}
-
-function dispose() {
-	graphEditor.dispose();
-}
-
-function save() {
-	localStorage.setItem("graph", JSON.stringify(graph));
 }

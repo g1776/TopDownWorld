@@ -31,11 +31,14 @@ h1 {
     margin-right: 5px;
 }
 
+/* #region button */
+
 button {
   appearance: button;
-  background-color: #1899D6;
+  background-color: #1CB0F6;
   border: solid transparent;
   border-radius: 16px;
+  /* Set the shadow effect on the bottom of the button */
   border-width: 0 0 4px;
   box-sizing: border-box;
   color: #FFFFFF;
@@ -61,7 +64,7 @@ button {
   white-space: nowrap;
 }
 
-button:after {
+button.fancy:after {
   background-clip: padding-box;
   background-color: #1CB0F6;
   border: solid transparent;
@@ -74,6 +77,10 @@ button:after {
   right: 0;
   top: 0;
   z-index: -1;
+}
+
+button.fancy {
+    background-color: #1899D6;
 }
 
 button:main,
@@ -90,18 +97,44 @@ button:disabled {
   cursor: auto;
 }
 
-button:active {
+button.fancy:active {
   border-width: 4px 0 0;
   background: none;
 }
 
-.mode-form {
-    display: inline-block;
+button.fancy.selected {
+  border-width: 4px 0 0;
+  background: none;
 }
+
+/* #endregion */
+
+/* #region Button Group */
 
 .button-group {
-    
+    background-color: #1CB0F6;
+    border-radius: 16px;
 }
 
-.button-group button {
+.button-group > button {
+    border-radius: 0;
+    background-color: #1CB0F6;
 }
+
+.button-group > button:first-child {
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
+}
+
+.button-group > button:last-child {
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+
+.button-group > button.selected {
+    background-color: #1899D6;
+}
+
+/* #endregion */
+
+

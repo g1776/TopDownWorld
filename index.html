@@ -7,18 +7,17 @@
     </head>
     <body>
         <div id="controls">
-            <button onclick="dispose()">🗑️</button>
-            <button onclick="save()">💾</button>
-            <form id="mode-form">
-                <div class="button-group">
-                    <button id="graphBtn" onclick="setMode('graph')">🌐</button>
-                    <button id="stopBtn" onclick="setMode('stop')">🛑</button>
-                </div>
-            </form>
+            <button class="fancy" onclick="controls.dispose()">🗑️</button>
+            <button class="fancy" onclick="controls.save()">💾</button>
+            <div id="mode-btns" class="button-group">
+                <button value="graph" onclick="controls.setMode('graph')">🌐</button>
+                <button value="stop" onclick="controls.setMode('stop')">🛑</button>
+            </div>
         </div>
         <canvas id="myCanvas"></canvas>
         
 
+        <script src="dist/enums.js"></script>
         <script src="dist/settings.js"></script>
         <script src="dist/graphEditor.js"></script>
         <script src="dist/world.js"></script>
@@ -31,7 +30,9 @@
         <script src="dist/primitives/point.js"></script>
         <script src="dist/primitives/polygon.js"></script>
         <script src="dist/primitives/segment.js"></script>
-        <script src="dist/primitives//envelope.js"></script>
+        <script src="dist/primitives/envelope.js"></script>
+        <script src="dist/controls.js"></script>
         <script src="dist/main.js"></script>
+        
     </body>
 </html>
