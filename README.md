@@ -18,4 +18,4 @@ tsc -w
 -   Made more well-defined classes for the different types of objects along with interfaces.
 -   Centralized all default values and other settings in a single file: `settings.ts`
 -   Randomized building sizes
--   Added a "controls" app bar
+-   Added a styled app bar

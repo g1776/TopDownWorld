@@ -5,7 +5,7 @@ class World {
 	trees: Set<Tree> = new Set();
 	constructor(
 		public graph: Graph,
-		public roadWith = Settings.ROAD_WIDTH,
+		public roadWidth = Settings.ROAD_WIDTH,
 		public roadRoundness = Settings.ROAD_ROUNDNESS,
 
 		/***
@@ -27,14 +27,13 @@ class World {
 		this.roads = [];
 		this.roadBorders = [];
 
-		const graphHash = graph.hash();
 		this.generate();
 	}
 
 	generate() {
 		this.roads.length = 0;
 		for (const seg of this.graph.segments) {
-			this.roads.push(new Road(seg, this.roadWith, this.roadRoundness));
+			this.roads.push(new Road(seg, this.roadWidth, this.roadRoundness));
 		}
 
 		this.roadBorders = Polygon.union(this.roads.map((road) => road.base));
@@ -53,7 +52,7 @@ class World {
 				(seg) =>
 					new Envelope(
 						seg,
-						this.roadWith + this.buildingWidth + this.buildingSpacing * 2,
+						this.roadWidth + this.buildingWidth + this.buildingSpacing * 2,
 						// pass a fairly large roundness, so we don't get weird buildings on the edge of the envelope
 						// This will ensure that we don't get edges > buildingMinLength
 						20

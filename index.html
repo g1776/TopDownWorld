@@ -3,6 +3,7 @@
     <head>
         <title>World Editor</title>
         <link rel="stylesheet" href="styles.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     </head>
     <body>
@@ -10,27 +11,43 @@
             <button class="fancy" onclick="controls.dispose()">🗑️</button>
             <button class="fancy" onclick="controls.save()">💾</button>
             <div id="mode-btns" class="button-group">
-                <button value="graph" onclick="controls.setMode('graph')">🌐</button>
-                <button value="stop" onclick="controls.setMode('stop')">🛑</button>
+                <button value="graph" onclick="controls.setEditorMode('graph')">🌐</button>
+                <button value="stop" onclick="controls.setEditorMode('stop')">🛑</button>
+                <button value="viewOnly" onclick="controls.setEditorMode('viewOnly')">👁️</button>
             </div>
         </div>
         <canvas id="myCanvas"></canvas>
         
 
+        <!-- Misc 1 -->
         <script src="dist/enums.js"></script>
         <script src="dist/settings.js"></script>
-        <script src="dist/graphEditor.js"></script>
-        <script src="dist/world.js"></script>
-        <script src="dist/viewport.js"></script>
         <script src="dist/math/graph.js"></script>
         <script src="dist/math/utils.js"></script>
-        <script src="dist/items/tree.js"></script>
-        <script src="dist/items/building.js"></script>
-        <script src="dist/items/road.js"></script>
+
+        <!-- Primitives -->
         <script src="dist/primitives/point.js"></script>
         <script src="dist/primitives/polygon.js"></script>
         <script src="dist/primitives/segment.js"></script>
         <script src="dist/primitives/envelope.js"></script>
+
+        <!-- Markers -->
+        <script src="dist/markings/stop.js"></script>
+        
+        <!-- Big picture stuff -->
+        <script src="dist/world.js"></script>
+        <script src="dist/viewport.js"></script>
+
+        <!-- Items -->
+        <script src="dist/items/tree.js"></script>
+        <script src="dist/items/building.js"></script>
+        <script src="dist/items/road.js"></script>
+        
+        <!-- Editors -->
+        <script src="dist/editors/graphEditor.js"></script>
+        <script src="dist/editors/stopEditor.js"></script>
+
+        <!-- Driver code -->
         <script src="dist/controls.js"></script>
         <script src="dist/main.js"></script>
         

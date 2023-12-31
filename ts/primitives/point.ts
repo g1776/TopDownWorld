@@ -13,7 +13,10 @@ class Point implements Primitive {
 	 * @param x - The x-coordinate of the point
 	 * @param y - The y-coordinate of the point
 	 */
-	constructor(public x: number, public y: number) {}
+	constructor(public x: number, public y: number) {
+		this.x = Number(x.toFixed(Settings.FLOATING_POINT_PRECISION));
+		this.y = Number(y.toFixed(Settings.FLOATING_POINT_PRECISION));
+	}
 
 	/**
 	 *

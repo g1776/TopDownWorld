@@ -1,17 +1,25 @@
 class Controls {
-	private mode: Mode = Mode.GRAPH;
+	// set the default mode here
+	private mode: EditorMode = EditorMode.STOP;
 
-	constructor(public graphEditor: GraphEditor) {}
-
-	dispose() {
-		this.graphEditor.dispose();
+	constructor(public editors: Editor[]) {
+		this.setEditorMode(this.mode);
 	}
 
 	save() {
-		localStorage.setItem("graph", JSON.stringify(graph));
+		this.editors.forEach((editor) => editor.save());
 	}
 
-	setMode(mode: Mode) {
+	dispose() {
+		this.editors.forEach((editor) => editor.dispose());
+	}
+
+	/**
+	 * Sets the mode of the controls.
+	 * @param mode - The mode to set.
+	 */
+	setEditorMode(mode: EditorMode) {
+		// update the button styling
 		const modeBtns = document.getElementById("mode-btns")
 			?.children as HTMLCollectionOf<HTMLButtonElement>;
 		for (const btn of modeBtns) {
@@ -22,8 +30,15 @@ class Controls {
 			}
 		}
 
+		// enable/disable the appropriate editors
+		this.editors.forEach((editor) => {
+			if (editor.type === mode) {
+				editor.enable();
+			} else {
+				editor.disable();
+			}
+		});
+
 		this.mode = mode;
 	}
-
-	disableEditors() {}
 }

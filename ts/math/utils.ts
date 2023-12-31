@@ -28,6 +28,25 @@ function getNearestPoint(
 	return nearest;
 }
 
+function getNearestSegment(
+	loc: Point,
+	segments: Segment[],
+	threshold = Number.MAX_SAFE_INTEGER
+): Segment | null {
+	let minDist = Number.MAX_SAFE_INTEGER;
+	let nearest: Segment | null = null;
+
+	segments.forEach((segment) => {
+		const dist = segment.distanceToPoint(loc);
+		if (dist < minDist && dist < threshold) {
+			minDist = dist;
+			nearest = segment;
+		}
+	});
+
+	return nearest;
+}
+
 /**
  * Calculates the Euclidean distance between two points
  * @returns The distance between the two points

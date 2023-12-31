@@ -18,6 +18,10 @@ class Envelope implements Primitive {
 	 * @private
 	 */
 	private generatePolygon(width: number, roundness: number): Polygon {
+		if (roundness == 0) {
+			throw new Error("Divide by Zero Error: Roundness cannot be 0");
+		}
+
 		const { p1, p2 } = this.skeleton;
 
 		const radius = width / 2;
