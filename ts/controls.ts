@@ -1,6 +1,6 @@
 class Controls {
 	// set the default mode here
-	private mode: EditorMode = EditorMode.STOP;
+	private mode: EditorMode = EditorMode.GRAPH;
 
 	constructor(public editors: Editor[]) {
 		this.setEditorMode(this.mode);

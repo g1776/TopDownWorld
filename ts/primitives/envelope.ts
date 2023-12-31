@@ -1,4 +1,4 @@
-class Envelope implements Primitive {
+class Envelope extends AbstractPrimitive {
 	poly: Polygon;
 	/**
 	 * Creates a new Envelope instance.
@@ -7,7 +7,13 @@ class Envelope implements Primitive {
 	 * @param roundness - The roundness factor of the envelope (default is 1).
 	 */
 	constructor(public skeleton: Segment, public width: number, public roundness = 1) {
-		this.poly = this.generatePolygon(width, roundness);
+		super();
+		this.poly = this.generatePolygon(width, roundness).setParent(this);
+	}
+
+	override setParent(parent: Item | Primitive): Envelope {
+		super.setParent(parent);
+		return this;
 	}
 
 	/**
@@ -19,7 +25,7 @@ class Envelope implements Primitive {
 	 */
 	private generatePolygon(width: number, roundness: number): Polygon {
 		if (roundness == 0) {
-			throw new Error("Divide by Zero Error: Roundness cannot be 0");
+			throw new Error("Divide by Zero Error: Envelope roundness cannot be 0");
 		}
 
 		const { p1, p2 } = this.skeleton;

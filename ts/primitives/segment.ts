@@ -6,13 +6,15 @@ interface SegmentData {
 /**
  * Represents a segment between two points
  */
-class Segment implements Primitive {
+class Segment extends AbstractPrimitive {
 	/**
 	 * Constructs a Segment instance with two points
 	 * @param p1 - The first point of the segment
 	 * @param p2 - The second point of the segment
 	 */
-	constructor(public p1: Point, public p2: Point) {}
+	constructor(public p1: Point, public p2: Point) {
+		super();
+	}
 
 	/**
 	 *	Loads a segment from segment data and a list of existing points
@@ -25,6 +27,11 @@ class Segment implements Primitive {
 			points.find((p) => p.equals(data.p1))!,
 			points.find((p) => p.equals(data.p2))!
 		);
+	}
+
+	override setParent(parent: Item | Primitive): Segment {
+		super.setParent(parent);
+		return this;
 	}
 
 	length(): number {
@@ -116,6 +123,6 @@ class Segment implements Primitive {
 	}
 
 	hash(): string {
-		return JSON.stringify(this);
+		return { p1: this.p1.hash(), p2: this.p2.hash() }.toString();
 	}
 }

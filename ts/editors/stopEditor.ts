@@ -72,7 +72,7 @@ class StopEditor implements Editor {
 		this.mouse = this.viewport.getMouse(evt, true);
 		const seg = getNearestSegment(
 			this.mouse,
-			this.world.graph.segments,
+			this.world.laneGuides,
 			10 * this.viewport.zoom
 		);
 		if (seg) {

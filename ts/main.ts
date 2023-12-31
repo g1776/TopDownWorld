@@ -16,7 +16,7 @@ const graphData: GraphData | null = graphString ? JSON.parse(graphString) : null
 const graph = graphData ? Graph.load(graphData) : new Graph([p1, p2], [s1]);
 const world = new World(graph);
 const viewport = new Viewport(myCanvas);
-const editors: Editor[] = [new GraphEditor(viewport, graph), new StopEditor(viewport, world)];
+const editors: Editor[] = [new GraphEditor(viewport, graph)];
 const controls = new Controls(editors);
 
 let oldGraphHash = graph.hash();

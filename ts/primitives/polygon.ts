@@ -1,16 +1,19 @@
-class Polygon implements Primitive {
+class Polygon extends AbstractPrimitive {
 	segments: Segment[];
 	constructor(public points: Point[]) {
+		super();
 		this.segments = [];
 		for (let i = 1; i <= points.length; i++) {
-			this.segments.push(new Segment(points[i - 1], points[i % points.length]));
+			this.segments.push(
+				new Segment(points[i - 1], points[i % points.length]).setParent(this)
+			);
 		}
 	}
 
 	/**
 	 * Computes the union of multiple polygons and returns an array of segments.
 	 * The union of polygons is the set of all points that are contained in at least one of the polygons.
-	 * 
+	 *
 	 * @param polys An array of polygons to compute the union.
 	 * @returns An array of segments representing the union of the polygons.
 	 */
@@ -50,7 +53,7 @@ class Polygon implements Primitive {
 
 	/**
 	 * Breaks the given polygons at their intersections and updates the segments accordingly.
-	 * 
+	 *
 	 * @param poly1 - The first polygon.
 	 * @param poly2 - The second polygon.
 	 */
@@ -70,13 +73,24 @@ class Polygon implements Primitive {
 					const point = new Point(intersection.x, intersection.y);
 					let aux = segs1[i].p2;
 					segs1[i].p2 = point;
-					segs1.splice(i + 1, 0, new Segment(point, aux));
+					// Add a new segment to the polygon, mainting the parent
+					segs1.splice(i + 1, 0, new Segment(point, aux).setParent(poly1));
 					aux = segs2[j].p2;
 					segs2[j].p2 = point;
-					segs2.splice(j + 1, 0, new Segment(point, aux));
+					// Add a new segment to the polygon, mainting the parent
+					segs2.splice(j + 1, 0, new Segment(point, aux).setParent(poly2));
 				}
 			}
 		}
+	}
+
+	override setParent(parent: Item | Primitive): Polygon {
+		super.setParent(parent);
+		return this;
+	}
+
+	equals(poly: Polygon): boolean {
+		return this.hash() === poly.hash();
 	}
 
 	/**
@@ -134,6 +148,6 @@ class Polygon implements Primitive {
 	}
 
 	hash(): string {
-		return JSON.stringify(this.points);
+		return this.segments.map((seg) => seg.hash()).toString();
 	}
 }

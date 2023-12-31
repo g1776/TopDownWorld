@@ -6,14 +6,14 @@ interface PointData {
 /**
  * Represents a point in 2D space
  */
-class Point implements Primitive {
-	parent?: Primitive;
+class Point extends AbstractPrimitive {
 	/**
 	 * Constructs a Point instance with x and y coordinates
 	 * @param x - The x-coordinate of the point
 	 * @param y - The y-coordinate of the point
 	 */
 	constructor(public x: number, public y: number) {
+		super();
 		this.x = Number(x.toFixed(Settings.FLOATING_POINT_PRECISION));
 		this.y = Number(y.toFixed(Settings.FLOATING_POINT_PRECISION));
 	}
@@ -24,6 +24,11 @@ class Point implements Primitive {
 	 */
 	static load(data: PointData): Point {
 		return new Point(data.x, data.y);
+	}
+
+	override setParent(parent: Item | Primitive): Point {
+		super.setParent(parent);
+		return this;
 	}
 
 	/**
@@ -71,6 +76,6 @@ class Point implements Primitive {
 	}
 
 	hash(): string {
-		return JSON.stringify(this);
+		return { x: this.x, y: this.y }.toString();
 	}
 }

@@ -1,8 +1,20 @@
+type CachedRender = {
+	roadBorders: Segment[];
+	buildings: Building[];
+};
+
 class World {
 	roads: Road[];
 	roadBorders: Segment[];
 	buildings: Building[] = [];
 	trees: Set<Tree> = new Set();
+	laneGuides: Segment[] = [];
+
+	private lastRender: CachedRender = {
+		roadBorders: [],
+		buildings: [],
+	};
+
 	constructor(
 		public graph: Graph,
 		public roadWidth = Settings.ROAD_WIDTH,
@@ -32,6 +44,7 @@ class World {
 
 	generate() {
 		this.roads.length = 0;
+
 		for (const seg of this.graph.segments) {
 			this.roads.push(new Road(seg, this.roadWidth, this.roadRoundness));
 		}
@@ -39,9 +52,32 @@ class World {
 		this.roadBorders = Polygon.union(this.roads.map((road) => road.base));
 		this.buildings = this.generateBuildings();
 		this.trees = this.generateTrees();
+		// this.laneGuides = this.generateLaneGuides();
+
+		this.lastRender = {
+			roadBorders: this.roadBorders,
+			buildings: this.buildings,
+		};
 	}
 
-	generateBuildings(): Building[] {
+	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
+		this.roads.forEach((road) => road.draw(ctx));
+
+		// draw dashed lines on the road
+		this.graph.segments.forEach((seg) =>
+			seg.draw(ctx, { color: "white", width: 3, dash: [10, 10] })
+		);
+		this.roadBorders.forEach((seg) => seg.draw(ctx));
+
+		// sort and draw all the items in 3D
+		[...this.buildings, ...this.trees]
+			.sort((a, b) => b.base.distanceToPoint(viewPoint) - a.base.distanceToPoint(viewPoint))
+			.forEach((item) => {
+				item.draw(ctx, viewPoint);
+			});
+	}
+
+	private generateBuildings(): Building[] {
 		if (this.graph.segments.length === 0) {
 			return [];
 		}
@@ -124,10 +160,22 @@ class World {
 	}
 
 	generateTrees(): Set<Tree> {
+		if (this.graph.segments.length === 0) {
+			return new Set();
+		}
+
+		// determine the new roadBorders and buildings since the last render
+		let newRoadBorders = this.getNewRoadBordersSinceLastRender();
+		let newBuildings = this.getNewBuildingsSinceLastRender();
+
+		if (newRoadBorders.length === 0 && newBuildings.length === 0) {
+			return this.trees;
+		}
+
 		// Determine the bounds that trees can be generated in
 		const points = [
-			...this.roadBorders.map((seg) => [seg.p1, seg.p2]).flat(),
-			...this.buildings.map((b) => b.base.points).flat(),
+			...newRoadBorders.map((seg) => [seg.p1, seg.p2]).flat(),
+			...newBuildings.map((b) => b.base.points).flat(),
 		];
 
 		if (points.length === 0) {
@@ -148,28 +196,10 @@ class World {
 		const newTrees: Set<Tree> = new Set();
 		const closestGraphSegments = new Map<Tree, Segment>();
 
-		for (const tree of this.trees) {
-			const closestGraphSegment =
-				closestGraphSegments.get(tree) ||
-				this.graph.segments.reduce((prev, curr) =>
-					curr.distanceToPoint(tree.center) < prev.distanceToPoint(tree.center)
-						? curr
-						: prev
-				);
-
-			if (
-				tree.center.parent
-					? tree.center.parent.hash() === closestGraphSegment.hash()
-					: false
-			) {
-				// make sure its location is still valid
-				if (!this.validateTreeLocation(tree.center, illegalPolys, newTrees)) {
-					continue;
-				}
-
-				// keep the tree
-				newTrees.add(tree);
-				closestGraphSegments.set(tree, closestGraphSegment);
+		// validate old tree locations
+		for (const oldTree of this.trees) {
+			if (this.validateTreeLocation(oldTree.center, illegalPolys, newTrees)) {
+				newTrees.add(oldTree);
 			}
 		}
 
@@ -190,7 +220,7 @@ class World {
 			const closestGraphSegment = this.graph.segments.reduce((prev, curr) =>
 				curr.distanceToPoint(p) < prev.distanceToPoint(p) ? curr : prev
 			);
-			p.parent = closestGraphSegment;
+			p.setParent(closestGraphSegment);
 
 			if (keep) {
 				const newTree = new Tree(p, this.treeRadius, this.treeHeight);
@@ -204,21 +234,89 @@ class World {
 		return newTrees;
 	}
 
-	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
-		this.roads.forEach((road) => road.draw(ctx));
+	/**
+	 *
+	 * @returns A list of segments that are in the middle of the lanes of the roads.
+	 */
+	private generateLaneGuides(): Segment[] {
+		const tmpEvelopes = this.graph.segments
+			// for each segment, generate an envelope around it to create guides for placing buildings
+			.map((seg) => {
+				const env = new Envelope(
+					seg,
+					this.roadWidth / 2,
+					// pass a fairly large roundness, so we don't get weird buildings on the edge of the envelope
+					// This will ensure that we don't get edges > buildingMinLength
+					20
+				);
 
-		// draw dashed lines on the road
-		this.graph.segments.forEach((seg) =>
-			seg.draw(ctx, { color: "white", width: 3, dash: [10, 10] })
-		);
-		this.roadBorders.forEach((seg) => seg.draw(ctx));
-
-		// sort and draw all the items in 3D
-		[...this.buildings, ...this.trees]
-			.sort((a, b) => b.base.distanceToPoint(viewPoint) - a.base.distanceToPoint(viewPoint))
-			.forEach((item) => {
-				item.draw(ctx, viewPoint);
+				// set the parent of the envelope to the segment so we can check if the segment still exists on future renders (for optimization)
+				env;
+				return env;
 			});
+
+		const laneGuides = Polygon.union(
+			tmpEvelopes.map((env) => {
+				const poly = env.poly;
+				// pass the parent
+				poly;
+				return poly;
+			})
+		);
+
+		return laneGuides;
+	}
+
+	/**
+	 * @returns Get only the new road borders since the last render
+	 */
+	private getNewRoadBordersSinceLastRender(): Segment[] {
+		// determine the new roadBorders and buildings since the last render
+		let newRoadBorders: Segment[] = [];
+
+		let roadBordersSearchSpace = [...this.lastRender.roadBorders];
+		for (const currRoadBorder of this.roadBorders) {
+			let found = false;
+			let i = 0;
+			for (const lastRoadBorder of roadBordersSearchSpace) {
+				if (currRoadBorder.equals(lastRoadBorder)) {
+					found = true;
+					roadBordersSearchSpace.splice(i, 1);
+					// need to shift i so we don't skip an element as the search space shrinks
+					i--;
+					break;
+				}
+				i++;
+			}
+			if (!found) {
+				newRoadBorders.push(currRoadBorder);
+			}
+		}
+		return newRoadBorders;
+	}
+
+	private getNewBuildingsSinceLastRender(): Building[] {
+		let newBuildings: Building[] = [];
+
+		let buildingsSearchSpace = [...this.lastRender.buildings];
+		for (const currBuilding of this.buildings) {
+			let found = false;
+			let i = 0;
+			for (const lastBuilding of buildingsSearchSpace) {
+				if (currBuilding.base.equals(lastBuilding.base)) {
+					found = true;
+					buildingsSearchSpace.splice(i, 1);
+					// need to shift i so we don't skip an element as the search space shrinks
+					i--;
+					break;
+				}
+				i++;
+			}
+			if (!found) {
+				newBuildings.push(currBuilding);
+			}
+		}
+		return newBuildings;
 	}
 
 	private validateTreeLocation(

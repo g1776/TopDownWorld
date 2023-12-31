@@ -1,10 +1,10 @@
-class Tree implements Item {
-	public base: Polygon;
+class Tree extends AbstractItem {
 	constructor(
 		public center: Point,
 		public radius: number = Settings.TREE_RADIUS,
 		public heightCoef: number = Settings.TREE_HEIGHT
 	) {
+		super(new Polygon([]));
 		this.base = this.generateLevel(center, radius);
 	}
 
@@ -17,7 +17,7 @@ class Tree implements Item {
 			const noisyRadius = rad * lerp(0.5, 1, kindOfRandom);
 			points.push(translate(point, a, noisyRadius));
 		}
-		return new Polygon(points);
+		return new Polygon(points).setParent(this);
 	}
 
 	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {

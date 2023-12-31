@@ -1,11 +1,17 @@
-class Building implements Item {
-	constructor(public base: Polygon, public heightCoef: number = Settings.BUILDING_HEIGHT) {}
+class Building extends AbstractItem {
+	constructor(base: Polygon, public heightCoef: number = Settings.BUILDING_HEIGHT) {
+		super(base);
+	}
+
+	override setParent(parent: Item | Primitive): Building {
+		super.setParent(parent);
+		return this;
+	}
 
 	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
 		const ceilingPoints = this.base.points.map((p) =>
 			getPointOnZPlane(p, viewPoint, this.heightCoef)
 		);
-		const ceiling = new Polygon(ceilingPoints);
 
 		const sides = [];
 		for (let i = 0; i < this.base.points.length; i++) {

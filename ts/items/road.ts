@@ -1,14 +1,15 @@
-class Road implements Item {
-	/**
-	 * The base of the road. This is the polygon of the envelope.
-	 */
-	base: Polygon;
+class Road extends AbstractItem {
 	constructor(
 		public skeleton: Segment,
 		public width: number = Settings.ROAD_WIDTH,
 		public roundness = Settings.ROAD_ROUNDNESS
 	) {
-		this.base = new Envelope(skeleton, width, roundness).poly;
+		super(new Envelope(skeleton, width, roundness).poly);
+	}
+
+	override setParent(parent: Item | Primitive): Road {
+		super.setParent(parent);
+		return this;
 	}
 
 	draw(ctx: CanvasRenderingContext2D) {
