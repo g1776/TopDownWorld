@@ -2,7 +2,11 @@
 <html>
     <head>
         <title>World Editor</title>
-        <link rel="stylesheet" href="styles.css"/>
+        <link rel="stylesheet" href="styles/vars.css"/>
+        <link rel="stylesheet" href="styles/main.css"/>
+        <link rel="stylesheet" href="styles/switch.css"/>
+        <link rel="stylesheet" href="styles/button.css"/>
+        <link rel="stylesheet" href="styles/button-group.css"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     </head>
@@ -15,6 +19,11 @@
                 <button value="stop" onclick="controls.setEditorMode('stop')">🛑</button>
                 <button value="viewOnly" onclick="controls.setEditorMode('viewOnly')">👁️</button>
             </div>
+            <div>🌲</div>
+            <label class="switch">
+                <input type="checkbox" onclick="controls.toggleTrees(this.checked)">
+                <span class="slider round"></span>
+              </label>
         </div>
         <canvas id="myCanvas"></canvas>
         

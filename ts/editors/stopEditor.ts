@@ -70,11 +70,7 @@ class StopEditor implements Editor {
 
 	private handleMouseMove(evt: MouseEvent) {
 		this.mouse = this.viewport.getMouse(evt, true);
-		const seg = getNearestSegment(
-			this.mouse,
-			this.world.laneGuides,
-			10 * this.viewport.zoom
-		);
+		const seg = getNearestSegment(this.mouse, this.world.laneGuides, 10 * this.viewport.zoom);
 		if (seg) {
 			const proj = seg.projectPoint(this.mouse);
 

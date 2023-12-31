@@ -1,8 +1,9 @@
 class Controls {
 	// set the default mode here
 	private mode: EditorMode = EditorMode.GRAPH;
+	private treesEnabled: boolean = false;
 
-	constructor(public editors: Editor[]) {
+	constructor(public editors: Editor[], private world: World) {
 		this.setEditorMode(this.mode);
 	}
 
@@ -12,6 +13,14 @@ class Controls {
 
 	dispose() {
 		this.editors.forEach((editor) => editor.dispose());
+	}
+
+	toggleTrees(enabled: boolean) {
+		if (enabled) {
+			this.world.enableTrees();
+		} else {
+			this.world.disableTrees();
+		}
 	}
 
 	/**

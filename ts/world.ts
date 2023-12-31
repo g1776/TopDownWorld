@@ -1,6 +1,7 @@
 type CachedRender = {
 	roadBorders: Segment[];
 	buildings: Building[];
+	segments: Segment[];
 };
 
 class World {
@@ -10,9 +11,17 @@ class World {
 	trees: Set<Tree> = new Set();
 	laneGuides: Segment[] = [];
 
+	private treesEnabled = false;
+
+	/**
+	 * If true, the world will be regenerated on the next render.
+	 */
+	private regenerateAllTrees = false;
+
 	private lastRender: CachedRender = {
 		roadBorders: [],
 		buildings: [],
+		segments: [],
 	};
 
 	constructor(
@@ -42,6 +51,18 @@ class World {
 		this.generate();
 	}
 
+	enableTrees() {
+		this.treesEnabled = true;
+		this.regenerateAllTrees = true;
+		this.generate();
+	}
+
+	disableTrees() {
+		this.treesEnabled = false;
+		this.regenerateAllTrees = true;
+		this.generate();
+	}
+
 	generate() {
 		this.roads.length = 0;
 
@@ -51,30 +72,14 @@ class World {
 
 		this.roadBorders = Polygon.union(this.roads.map((road) => road.base));
 		this.buildings = this.generateBuildings();
-		this.trees = this.generateTrees();
-		// this.laneGuides = this.generateLaneGuides();
+		this.trees = this.treesEnabled ? this.generateTrees() : new Set();
+		this.laneGuides = this.generateLaneGuides();
 
 		this.lastRender = {
 			roadBorders: this.roadBorders,
 			buildings: this.buildings,
+			segments: this.graph.segments,
 		};
-	}
-
-	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
-		this.roads.forEach((road) => road.draw(ctx));
-
-		// draw dashed lines on the road
-		this.graph.segments.forEach((seg) =>
-			seg.draw(ctx, { color: "white", width: 3, dash: [10, 10] })
-		);
-		this.roadBorders.forEach((seg) => seg.draw(ctx));
-
-		// sort and draw all the items in 3D
-		[...this.buildings, ...this.trees]
-			.sort((a, b) => b.base.distanceToPoint(viewPoint) - a.base.distanceToPoint(viewPoint))
-			.forEach((item) => {
-				item.draw(ctx, viewPoint);
-			});
 	}
 
 	private generateBuildings(): Building[] {
@@ -164,23 +169,34 @@ class World {
 			return new Set();
 		}
 
-		// determine the new roadBorders and buildings since the last render
-		let newRoadBorders = this.getNewRoadBordersSinceLastRender();
-		let newBuildings = this.getNewBuildingsSinceLastRender();
+		let newRoadBorders: Segment[];
+		let newBuildingBases: Polygon[];
 
-		if (newRoadBorders.length === 0 && newBuildings.length === 0) {
+		if (this.regenerateAllTrees) {
+			newRoadBorders = this.roadBorders;
+			newBuildingBases = this.buildings.map((b) => b.base);
+			this.regenerateAllTrees = false;
+		} else {
+			// determine the new roadBorders and buildings since the last render
+			newRoadBorders = this.getNewPrimitivesSinceLastRender(
+				this.roadBorders,
+				this.lastRender.roadBorders
+			) as Segment[];
+			newBuildingBases = this.getNewPrimitivesSinceLastRender(
+				this.buildings.map((b) => b.base),
+				this.lastRender.buildings.map((b) => b.base)
+			) as Polygon[];
+		}
+
+		if (newRoadBorders.length === 0 && newBuildingBases.length === 0) {
 			return this.trees;
 		}
 
 		// Determine the bounds that trees can be generated in
 		const points = [
 			...newRoadBorders.map((seg) => [seg.p1, seg.p2]).flat(),
-			...newBuildings.map((b) => b.base.points).flat(),
+			...newBuildingBases.map((b) => b.points).flat(),
 		];
-
-		if (points.length === 0) {
-			return new Set();
-		}
 
 		const left = Math.min(...points.map((p) => p.x));
 		const right = Math.max(...points.map((p) => p.x));
@@ -267,21 +283,20 @@ class World {
 		return laneGuides;
 	}
 
-	/**
-	 * @returns Get only the new road borders since the last render
-	 */
-	private getNewRoadBordersSinceLastRender(): Segment[] {
-		// determine the new roadBorders and buildings since the last render
-		let newRoadBorders: Segment[] = [];
+	private getNewPrimitivesSinceLastRender(
+		currPrimitives: Primitive[],
+		lastRenderPrimitives: Primitive[]
+	): Primitive[] {
+		let newPrimitives: Primitive[] = [];
 
-		let roadBordersSearchSpace = [...this.lastRender.roadBorders];
-		for (const currRoadBorder of this.roadBorders) {
+		let searchSpace = [...lastRenderPrimitives];
+		for (const currPrimitive of currPrimitives) {
 			let found = false;
 			let i = 0;
-			for (const lastRoadBorder of roadBordersSearchSpace) {
-				if (currRoadBorder.equals(lastRoadBorder)) {
+			for (const lastPrimitive of searchSpace) {
+				if (currPrimitive.equals(lastPrimitive)) {
 					found = true;
-					roadBordersSearchSpace.splice(i, 1);
+					searchSpace.splice(i, 1);
 					// need to shift i so we don't skip an element as the search space shrinks
 					i--;
 					break;
@@ -289,34 +304,10 @@ class World {
 				i++;
 			}
 			if (!found) {
-				newRoadBorders.push(currRoadBorder);
+				newPrimitives.push(currPrimitive);
 			}
 		}
-		return newRoadBorders;
-	}
-
-	private getNewBuildingsSinceLastRender(): Building[] {
-		let newBuildings: Building[] = [];
-
-		let buildingsSearchSpace = [...this.lastRender.buildings];
-		for (const currBuilding of this.buildings) {
-			let found = false;
-			let i = 0;
-			for (const lastBuilding of buildingsSearchSpace) {
-				if (currBuilding.base.equals(lastBuilding.base)) {
-					found = true;
-					buildingsSearchSpace.splice(i, 1);
-					// need to shift i so we don't skip an element as the search space shrinks
-					i--;
-					break;
-				}
-				i++;
-			}
-			if (!found) {
-				newBuildings.push(currBuilding);
-			}
-		}
-		return newBuildings;
+		return newPrimitives;
 	}
 
 	private validateTreeLocation(
@@ -352,5 +343,22 @@ class World {
 		}
 
 		return true;
+	}
+
+	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
+		this.roads.forEach((road) => road.draw(ctx));
+
+		// draw dashed lines on the road
+		this.graph.segments.forEach((seg) =>
+			seg.draw(ctx, { color: "white", width: 3, dash: [10, 10] })
+		);
+		this.roadBorders.forEach((seg) => seg.draw(ctx));
+
+		// sort and draw all the items in 3D
+		[...this.buildings, ...this.trees]
+			.sort((a, b) => b.base.distanceToPoint(viewPoint) - a.base.distanceToPoint(viewPoint))
+			.forEach((item) => {
+				item.draw(ctx, viewPoint);
+			});
 	}
 }

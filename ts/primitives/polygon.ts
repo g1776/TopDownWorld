@@ -148,6 +148,9 @@ class Polygon extends AbstractPrimitive {
 	}
 
 	hash(): string {
-		return this.segments.map((seg) => seg.hash()).toString();
+		return this.segments
+			.map((seg) => seg.hash())
+			.sort()
+			.toString();
 	}
 }

@@ -11,4 +11,6 @@ interface Primitive extends Hashable {
 	 * @returns this
 	 */
 	setParent(parent: Primitive | Item): Primitive;
+
+	equals(other: Primitive): boolean;
 }
