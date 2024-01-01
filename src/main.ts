@@ -7,6 +7,14 @@ import Viewport from "./viewport";
 import World, { WorldData } from "./world";
 import { GraphEditor, StopEditor } from "./editors";
 
+// styles
+import "./css/appbar.css";
+import "./css/button-group.css";
+import "./css/button.css";
+import "./css/main.css";
+import "./css/switch.css";
+import "./css/vars.css";
+
 // setup the canvas
 const myCanvas = document.getElementById("myCanvas") as HTMLCanvasElement;
 myCanvas.width = window.innerWidth;

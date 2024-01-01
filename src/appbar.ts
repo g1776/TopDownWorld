@@ -61,6 +61,10 @@ export default class Appbar {
 		this.mode = mode;
 	}
 
+	private setWorldTitle(title: string) {
+		this.world.title = title;
+	}
+
 	private addEventListener(id: string, callback: any) {
 		const element = document.getElementById(id);
 		if (element) {

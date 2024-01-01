@@ -2,13 +2,6 @@
 <html>
 	<head>
 		<title>World Editor</title>
-		
-		<link rel="stylesheet" href="css/vars.css" />
-		<link rel="stylesheet" href="css/main.css" />
-		<link rel="stylesheet" href="css/switch.css" />
-		<link rel="stylesheet" href="css/button.css" />
-		<link rel="stylesheet" href="css/button-group.css" />
-		<link rel="stylesheet" href="css/appbar.css" />
 		<link
 			rel="stylesheet"
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
@@ -34,12 +27,15 @@
 					<span class="slider round"></span>
 				</label>
 			</div>
+
+			<div id="appbar-center">
+				<h3>Top Down World</h3>
+			</div>
+
 			<div id="appbar-right">
-				<input id="world-title" type="text" placeholder="World title" />
+				<i class="fa fa-info-circle info" id="action-btn-info"></i>
 			</div>
 		</div>
 		<canvas id="myCanvas"></canvas>
-
-        <script src="bundle.js"></script>
 	</body>
 </html>

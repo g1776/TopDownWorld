@@ -11,7 +11,11 @@ npm install
 npm start
 ```
 
-## Improvements made by me
+## Contributing
+
+Please use Prettier with the default settings to format your code.
+
+## Improvements from the original series
 
 -   Written in TypeScript + Webpack
 -   Made more well-defined classes for the different types of objects along with interfaces.

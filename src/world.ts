@@ -198,7 +198,7 @@ export default class World {
 		return bases.map((b) => new Building(b));
 	}
 
-	generateTrees(): Set<Tree> {
+	private generateTrees(): Set<Tree> {
 		if (this.graph.segments.length === 0) {
 			return new Set();
 		}
