@@ -15,6 +15,8 @@ npm start
 
 Please use Prettier with the default settings to format your code.
 
+Feel free to open an issue or submit a pull request to the `dev` branch.
+
 ## Improvements from the original series
 
 -   Written in TypeScript + Webpack
