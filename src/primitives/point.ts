@@ -81,6 +81,6 @@ export default class Point extends AbstractPrimitive {
 	}
 
 	hash(): string {
-		return { x: this.x, y: this.y }.toString();
+		return JSON.stringify({ x: this.x, y: this.y });
 	}
 }

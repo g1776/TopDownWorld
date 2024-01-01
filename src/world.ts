@@ -207,9 +207,9 @@ export default class World {
 		let newBuildingBases: Polygon[];
 
 		if (this.regenerateAllTrees) {
+			this.regenerateAllTrees = false;
 			newRoadBorders = this.roadBorders;
 			newBuildingBases = this.buildings.map((b) => b.base);
-			this.regenerateAllTrees = false;
 		} else {
 			// determine the new roadBorders and buildings since the last render
 			newRoadBorders = this.getNewPrimitivesSinceLastRender(
@@ -222,6 +222,7 @@ export default class World {
 			) as Polygon[];
 		}
 
+		// if there are no new road borders or building bases, we can use the same trees from the last render
 		if (newRoadBorders.length === 0 && newBuildingBases.length === 0) {
 			return this.trees;
 		}
@@ -232,10 +233,18 @@ export default class World {
 			...newBuildingBases.map((b) => b.points).flat(),
 		];
 
-		const left = Math.min(...points.map((p) => p.x));
-		const right = Math.max(...points.map((p) => p.x));
-		const top = Math.min(...points.map((p) => p.y));
-		const bottom = Math.max(...points.map((p) => p.y));
+		// Determine the bounds that trees can be generated in
+		let left = Infinity;
+		let right = -Infinity;
+		let top = Infinity;
+		let bottom = -Infinity;
+
+		for (const p of points) {
+			if (p.x < left) left = p.x;
+			if (p.x > right) right = p.x;
+			if (p.y < top) top = p.y;
+			if (p.y > bottom) bottom = p.y;
+		}
 
 		// We dont want to generate trees on the road or in buildings
 		const illegalPolys = new Set([
@@ -258,10 +267,9 @@ export default class World {
 
 		while (tryCount < treeCountScaleFactor) {
 			// generate a random point in the bounds
-			const p = new Point(
-				lerp(left, right, Math.random()),
-				lerp(bottom, top, Math.random())
-			);
+			const randX = Math.random();
+			const randY = Math.random();
+			const p = new Point(lerp(left, right, randX), lerp(bottom, top, randY));
 
 			// validate the point
 			const keep = this.validateTreeLocation(p, illegalPolys, newTrees);
@@ -323,24 +331,16 @@ export default class World {
 	): Primitive[] {
 		let newPrimitives: Primitive[] = [];
 
-		let searchSpace = [...lastRenderPrimitives];
+		// Create a set with the hashes of the lastRenderPrimitives
+		let lastRenderHashes = new Set(lastRenderPrimitives.map((p) => p.hash()));
+
 		for (const currPrimitive of currPrimitives) {
-			let found = false;
-			let i = 0;
-			for (const lastPrimitive of searchSpace) {
-				if (currPrimitive.equals(lastPrimitive)) {
-					found = true;
-					searchSpace.splice(i, 1);
-					// need to shift i so we don't skip an element as the search space shrinks
-					i--;
-					break;
-				}
-				i++;
-			}
-			if (!found) {
+			// If the hash of the current primitive is not in the set, it's a new primitive
+			if (!lastRenderHashes.has(currPrimitive.hash())) {
 				newPrimitives.push(currPrimitive);
 			}
 		}
+
 		return newPrimitives;
 	}
 
@@ -349,11 +349,25 @@ export default class World {
 		illegalPolys: Set<Polygon>,
 		otherTrees: Set<Tree>
 	): boolean {
-		// make sure the tree is not in an illegal polygon
+		const numTreesToPadWith = 2;
+		let closeToSomething = false;
+
+		// make sure the tree is not in an illegal polygon and is close to something
 		for (const poly of illegalPolys) {
 			if (poly.containsPoint(p) || poly.distanceToPoint(p) < this.treeRadius / 2) {
 				return false;
 			}
+
+			if (
+				!closeToSomething &&
+				poly.distanceToPoint(p) < this.treeRadius * numTreesToPadWith
+			) {
+				closeToSomething = true;
+			}
+		}
+
+		if (!closeToSomething) {
+			return false;
 		}
 
 		// make sure the tree is not too close to another tree
@@ -361,19 +375,6 @@ export default class World {
 			if (distance(tree.center, p) < this.treeRadius) {
 				return false;
 			}
-		}
-
-		// make sure the tree is close to something
-		const numTreesToPadWith = 2;
-		let closeToSomething = false;
-		for (const poly of illegalPolys) {
-			if (poly.distanceToPoint(p) < this.treeRadius * numTreesToPadWith) {
-				closeToSomething = true;
-				break;
-			}
-		}
-		if (!closeToSomething) {
-			return false;
 		}
 
 		return true;

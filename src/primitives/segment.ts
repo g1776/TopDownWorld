@@ -130,6 +130,6 @@ export default class Segment extends AbstractPrimitive {
 	}
 
 	hash(): string {
-		return { p1: this.p1.hash(), p2: this.p2.hash() }.toString();
+		return JSON.stringify({ p1: this.p1.hash(), p2: this.p2.hash() });
 	}
 }
