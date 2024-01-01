@@ -1,3 +1,12 @@
+import { Segment, Point } from "./primitives";
+import Graph, { GraphData } from "./math/graph";
+import { scale } from "./math/utils";
+import Editor from "interfaces/editor";
+import Appbar from "./appbar";
+import Viewport from "./viewport";
+import World, { WorldData } from "./world";
+import { GraphEditor, StopEditor } from "./editors";
+
 // setup the canvas
 const myCanvas = document.getElementById("myCanvas") as HTMLCanvasElement;
 myCanvas.width = window.innerWidth;
@@ -33,7 +42,7 @@ const world = loadFromLocalStorage<World, WorldData>(
 );
 const viewport = new Viewport(myCanvas);
 const editors: Editor[] = [new GraphEditor(viewport, graph), new StopEditor(viewport, world)];
-const controls = new Controls(editors, world);
+new Appbar(editors, world);
 
 // start the animation loop
 let oldGraphHash = graph.hash();

@@ -1,4 +1,11 @@
-class Building extends AbstractItem {
+import AbstractItem from "./abstractItem";
+import { Point, Polygon, Segment, Envelope } from "../primitives";
+import { distance, getPointOnZPlane } from "../math/utils";
+import Settings from "../settings";
+import Item from "../interfaces/item";
+import Primitive from "../interfaces/primitive";
+
+export default class Building extends AbstractItem {
 	constructor(base: Polygon, public heightCoef: number = Settings.BUILDING_HEIGHT) {
 		super(base);
 	}

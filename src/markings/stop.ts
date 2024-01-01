@@ -1,4 +1,8 @@
-class Stop {
+import { Polygon, Segment, Point, Envelope } from "../primitives";
+import { translate, angle } from "../math/utils";
+import Item from "../interfaces/item";
+
+export default class Stop {
 	base: Polygon | Segment;
 	parent?: Item | undefined;
 

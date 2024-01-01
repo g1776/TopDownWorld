@@ -1,4 +1,11 @@
-class Polygon extends AbstractPrimitive {
+import AbstractPrimitive from "./abstractPrimitive";
+import Segment from "./segment";
+import Point from "./point";
+import { getIntersection, average } from "../math/utils";
+import Item from "../interfaces/item";
+import Primitive from "../interfaces/primitive";
+
+export default class Polygon extends AbstractPrimitive {
 	segments: Segment[];
 	constructor(public points: Point[]) {
 		super();

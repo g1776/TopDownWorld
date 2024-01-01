@@ -1,3 +1,3 @@
-interface Hashable {
+export default interface Hashable {
 	hash(): string;
 }

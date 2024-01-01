@@ -1,15 +1,22 @@
+import { Segment, Point, Polygon, Envelope } from "./primitives";
+import Graph from "math/graph";
+import { add, distance, lerp, scale } from "./math/utils";
+import { Road, Building, Tree } from "./items";
+import Primitive from "./interfaces/primitive";
+import Settings from "./settings";
+
 type CachedRender = {
 	roadBorders: Segment[];
 	buildings: Building[];
 	segments: Segment[];
 };
 
-type WorldData = {
+export type WorldData = {
 	treesEnabled: boolean;
 	title: string;
 };
 
-class World {
+export default class World {
 	roads: Road[];
 	roadBorders: Segment[];
 	buildings: Building[] = [];

@@ -2,11 +2,13 @@
 <html>
 	<head>
 		<title>World Editor</title>
+		
 		<link rel="stylesheet" href="css/vars.css" />
 		<link rel="stylesheet" href="css/main.css" />
 		<link rel="stylesheet" href="css/switch.css" />
 		<link rel="stylesheet" href="css/button.css" />
 		<link rel="stylesheet" href="css/button-group.css" />
+		<link rel="stylesheet" href="css/appbar.css" />
 		<link
 			rel="stylesheet"
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
@@ -19,16 +21,16 @@
 	<body>
 		<div id="appbar">
 			<div id="appbar-left">
-				<button class="fancy" onclick="appbar.dispose()">🗑️</button>
-				<button class="fancy" onclick="appbar.save()">💾</button>
+				<button class="fancy" id="action-btn-dispose">🗑️</button>
+				<button class="fancy" id="action-btn-save">💾</button>
 				<div id="mode-btns" class="button-group">
-					<button value="graph" onclick="appbar.setEditorMode('graph')">🌐</button>
-					<button value="stop" onclick="appbar.setEditorMode('stop')">🛑</button>
-					<button value="viewOnly" onclick="appbar.setEditorMode('viewOnly')">👁️</button>
+					<button value="graph" id="mode-btn-graph">🌐</button>
+					<button value="stop" id="mode-btn-stop">🛑</button>
+					<button value="viewOnly" id="mode-btn-view-only">👁️</button>
 				</div>
 				<span>🌲</span>
 				<label class="switch">
-					<input type="checkbox" onclick="appbar.toggleTrees(this.checked)" />
+					<input type="checkbox" id="checkbox-tree-toggle" />
 					<span class="slider round"></span>
 				</label>
 			</div>
@@ -38,6 +40,6 @@
 		</div>
 		<canvas id="myCanvas"></canvas>
 
-        <script src="dist/bundle.js"></script>
+        <script src="bundle.js"></script>
 	</body>
 </html>

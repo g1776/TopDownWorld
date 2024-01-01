@@ -1,4 +1,11 @@
-interface SegmentData {
+import Point from "./point";
+import AbstractPrimitive from "./abstractPrimitive";
+import { PointData } from "./point";
+import { add, distance, dot, magnitude, normalize, scale, subtract } from "../math/utils";
+import Item from "../interfaces/item";
+import Primitive from "../interfaces/primitive";
+
+export interface SegmentData {
 	p1: PointData;
 	p2: PointData;
 }
@@ -6,7 +13,7 @@ interface SegmentData {
 /**
  * Represents a segment between two points
  */
-class Segment extends AbstractPrimitive {
+export default class Segment extends AbstractPrimitive {
 	/**
 	 * Constructs a Segment instance with two points
 	 * @param p1 - The first point of the segment
@@ -29,7 +36,7 @@ class Segment extends AbstractPrimitive {
 		);
 	}
 
-	override setParent(parent: Item | Primitive): Segment {
+	setParent(parent: Item | Primitive): Segment {
 		super.setParent(parent);
 		return this;
 	}

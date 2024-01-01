@@ -1,4 +1,10 @@
-class Envelope extends AbstractPrimitive {
+import { Polygon, Segment } from ".";
+import AbstractPrimitive from "./abstractPrimitive";
+import { angle, subtract, translate } from "../math/utils";
+import Item from "../interfaces/item";
+import Primitive from "../interfaces/primitive";
+
+export default class Envelope extends AbstractPrimitive {
 	poly: Polygon;
 	/**
 	 * Creates a new Envelope instance.
@@ -11,7 +17,7 @@ class Envelope extends AbstractPrimitive {
 		this.poly = this.generatePolygon(width, roundness).setParent(this);
 	}
 
-	override setParent(parent: Item | Primitive): Envelope {
+	setParent(parent: Item | Primitive): Envelope {
 		super.setParent(parent);
 		return this;
 	}
@@ -47,7 +53,7 @@ class Envelope extends AbstractPrimitive {
 		return new Polygon(points);
 	}
 
-	override equals(other: Envelope): boolean {
+	equals(other: Envelope): boolean {
 		return (
 			this.poly.equals(other.poly) &&
 			this.roundness == other.roundness &&

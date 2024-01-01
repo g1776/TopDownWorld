@@ -1,4 +1,8 @@
-abstract class AbstractItem implements Item {
+import { Point, Polygon } from "../primitives";
+import Primitive from "../interfaces/primitive";
+import Item from "../interfaces/item";
+
+export default abstract class AbstractItem implements Item {
 	abstract draw(ctx: CanvasRenderingContext2D, viewPoint: Point): void;
 	private parent?: Item | Primitive;
 

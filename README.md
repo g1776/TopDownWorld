@@ -7,9 +7,8 @@ Based on the [YouTube tutorial by Radu Mariescu-Istodor](https://www.youtube.com
 ## Getting Started
 
 ```bash
-npm install -g typescript
-tsc -w
-# open index.html in browser
+npm install
+npm start
 ```
 
 ## Improvements made by me

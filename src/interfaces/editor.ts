@@ -1,6 +1,8 @@
-interface Editor {
+import { EditorMode } from "enums";
+
+export default interface Editor {
 	type: EditorMode;
-	dispose(): void;
+	dispose(promptFirst?: boolean): void;
 	save(): void;
 	enable(): void;
 	disable(): void;

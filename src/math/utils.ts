@@ -1,3 +1,5 @@
+import { Point, Segment } from "../primitives";
+
 /**
  * Finds the nearest point to a given location within a specified threshold from an array of points
  * @param loc - The reference point for which the nearest point is to be found
@@ -5,7 +7,7 @@
  * @param threshold - The maximum distance within which to consider a point as nearest (default is maximum safe integer)
  * @returns The nearest point within the threshold, or null if no point is found
  */
-function getNearestPoint(
+export function getNearestPoint(
 	loc: Point,
 	points: Point[],
 	threshold = Number.MAX_SAFE_INTEGER
@@ -28,7 +30,7 @@ function getNearestPoint(
 	return nearest;
 }
 
-function getNearestSegment(
+export function getNearestSegment(
 	loc: Point,
 	segments: Segment[],
 	threshold = Number.MAX_SAFE_INTEGER
@@ -51,31 +53,31 @@ function getNearestSegment(
  * Calculates the Euclidean distance between two points
  * @returns The distance between the two points
  */
-function distance(p1: Point, p2: Point): number {
+export function distance(p1: Point, p2: Point): number {
 	return Math.hypot(p1.x - p2.x, p1.y - p2.y);
 }
 
-function add(p1: Point, p2: Point): Point {
+export function add(p1: Point, p2: Point): Point {
 	return new Point(p1.x + p2.x, p1.y + p2.y);
 }
 
-function subtract(p1: Point, p2: Point): Point {
+export function subtract(p1: Point, p2: Point): Point {
 	return new Point(p1.x - p2.x, p1.y - p2.y);
 }
 
-function average(p1: Point, p2: Point): Point {
+export function average(p1: Point, p2: Point): Point {
 	return new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
 }
 
-function scale(p: Point, scaler: number): Point {
+export function scale(p: Point, scaler: number): Point {
 	return new Point(p.x * scaler, p.y * scaler);
 }
 
-function normalize(p: Point): Point {
+export function normalize(p: Point): Point {
 	return scale(p, 1 / magnitude(p));
 }
 
-function magnitude(p: Point): number {
+export function magnitude(p: Point): number {
 	return Math.hypot(p.x, p.y);
 }
 
@@ -86,7 +88,7 @@ function magnitude(p: Point): number {
  * @param offset - The distance by which to translate the point.
  * @returns The translated point.
  */
-function translate(loc: Point, angle: number, offset: number): Point {
+export function translate(loc: Point, angle: number, offset: number): Point {
 	return new Point(loc.x + Math.cos(angle) * offset, loc.y + Math.sin(angle) * offset);
 }
 
@@ -95,7 +97,7 @@ function translate(loc: Point, angle: number, offset: number): Point {
  * @param p
  * @returns The angle in radians of the point relative to the origin.
  */
-function angle(p: Point): number {
+export function angle(p: Point): number {
 	return Math.atan2(p.y, p.x);
 }
 
@@ -108,7 +110,7 @@ function angle(p: Point): number {
  * @param D - The ending point of the second line segment.
  * @returns The intersection point if it exists, otherwise null.
  */
-function getIntersection(A: Point, B: Point, C: Point, D: Point) {
+export function getIntersection(A: Point, B: Point, C: Point, D: Point) {
 	const tTop = (D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x);
 	const uTop = (C.y - A.y) * (A.x - B.x) - (C.x - A.x) * (A.y - B.y);
 	const bottom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
@@ -133,19 +135,19 @@ function getIntersection(A: Point, B: Point, C: Point, D: Point) {
  *
  * @returns The dot product of the two points
  */
-function dot(p1: Point, p2: Point): number {
+export function dot(p1: Point, p2: Point): number {
 	return p1.x * p2.x + p1.y * p2.y;
 }
 
-function lerp(a: number, b: number, t: number) {
+export function lerp(a: number, b: number, t: number) {
 	return a + (b - a) * t;
 }
 
-function lerp2D(p1: Point, p2: Point, t: number) {
+export function lerp2D(p1: Point, p2: Point, t: number) {
 	return new Point(lerp(p1.x, p2.x, t), lerp(p1.y, p2.y, t));
 }
 
-function getRandomColor() {
+export function getRandomColor() {
 	const hue = 290 + Math.random() * 260;
 	return "hsl(" + hue + ", 100%, 60%)";
 }
@@ -153,6 +155,6 @@ function getRandomColor() {
 /**
  * Returns a point that is artificially raise z units above the given point. (For faking 3D)
  */
-function getPointOnZPlane(p: Point, viewPoint: Point, z: number) {
+export function getPointOnZPlane(p: Point, viewPoint: Point, z: number) {
 	return add(p, scale(subtract(p, viewPoint), z));
 }

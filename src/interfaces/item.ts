@@ -1,4 +1,7 @@
-interface Item {
+import { Polygon, Point } from "../primitives";
+import Primitive from "./primitive";
+
+export default interface Item {
 	base: Polygon;
 	draw(ctx: CanvasRenderingContext2D, viewPoint: Point): void;
 

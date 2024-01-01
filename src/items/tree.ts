@@ -1,4 +1,9 @@
-class Tree extends AbstractItem {
+import AbstractItem from "./abstractItem";
+import { Point, Polygon } from "../primitives";
+import { lerp, translate, lerp2D, getPointOnZPlane } from "../math/utils";
+import Settings from "../settings";
+
+export default class Tree extends AbstractItem {
 	constructor(
 		public center: Point,
 		public radius: number = Settings.TREE_RADIUS,

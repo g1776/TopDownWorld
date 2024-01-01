@@ -1,5 +1,12 @@
+import Editor from "../interfaces/editor";
+import { Point, Segment } from "../primitives";
+import Graph from "../math/graph";
+import Viewport from "../viewport";
+import { getNearestPoint } from "../math/utils";
+import { EditorMode } from "../enums";
+
 /** Represents an editor for interacting with a graph on a canvas */
-class GraphEditor implements Editor {
+export default class GraphEditor implements Editor {
 	public readonly type = EditorMode.GRAPH;
 
 	/** The currently selected point in the editor */
@@ -38,14 +45,16 @@ class GraphEditor implements Editor {
 	}
 
 	save() {
-		localStorage.setItem("graph", JSON.stringify(graph));
+		localStorage.setItem("graph", JSON.stringify(this.graph));
 	}
 
-	dispose() {
-		const response = confirm(
-			"Are you sure you want to clear? Any unsaved progress will be lost."
-		);
-		if (!response) return;
+	dispose(promptFirst: boolean = true) {
+		if (promptFirst) {
+			const response = confirm(
+				"Are you sure you want to clear? Any unsaved progress will be lost."
+			);
+			if (!response) return;
+		}
 		this.graph.dispose();
 		this.selected = null;
 		this.hovered = null;

@@ -1,4 +1,9 @@
-interface PointData {
+import AbstractPrimitive from "./abstractPrimitive";
+import Item from "interfaces/item";
+import Primitive from "interfaces/primitive";
+import Settings from "../settings";
+
+export interface PointData {
 	x: number;
 	y: number;
 }
@@ -6,7 +11,7 @@ interface PointData {
 /**
  * Represents a point in 2D space
  */
-class Point extends AbstractPrimitive {
+export default class Point extends AbstractPrimitive {
 	/**
 	 * Constructs a Point instance with x and y coordinates
 	 * @param x - The x-coordinate of the point

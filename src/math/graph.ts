@@ -1,4 +1,7 @@
-interface GraphData {
+import Point, { PointData } from "../primitives/point";
+import Segment, { SegmentData } from "../primitives/segment";
+
+export interface GraphData {
 	points: PointData[];
 	segments: SegmentData[];
 }
@@ -6,7 +9,7 @@ interface GraphData {
 /**
  * Represents a graph containing points and segments
  */
-class Graph {
+export default class Graph {
 	/**
 	 * Constructs a Graph instance with points and segments
 	 * @param points - Array of points (default is an empty array)

@@ -1,3 +1,7 @@
+import { Point } from "./primitives";
+import Settings from "./settings";
+import { add, scale, subtract } from "./math/utils";
+
 interface DragState {
 	start: Point;
 	end: Point;
@@ -5,7 +9,7 @@ interface DragState {
 	active: boolean;
 }
 
-class Viewport {
+export default class Viewport {
 	public ctx: CanvasRenderingContext2D;
 	public zoom: number;
 	public offset: Point;

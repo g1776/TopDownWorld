@@ -1,4 +1,12 @@
-class StopEditor implements Editor {
+import { EditorMode } from "../enums";
+import Stop from "../markings/stop";
+import { Point } from "../primitives";
+import { getNearestSegment } from "../math/utils";
+import Editor from "interfaces/editor";
+import Viewport from "viewport";
+import World from "world";
+
+export default class StopEditor implements Editor {
 	public readonly type: EditorMode = EditorMode.STOP;
 
 	/** The CanvasRenderingContext2D used for drawing on the canvas */
@@ -25,11 +33,17 @@ class StopEditor implements Editor {
 		this.canvas = viewport.canvas;
 	}
 
-	dispose(): void {
-		throw new Error("Method not implemented.");
+	dispose(promptFirst: boolean = true): void {
+		if (promptFirst) {
+			const response = confirm(
+				"Are you sure you want to clear? Any unsaved progress will be lost."
+			);
+			if (!response) return;
+		}
+		return;
 	}
 	save(): void {
-		throw new Error("Method not implemented.");
+		return;
 	}
 	isEnabled(): boolean {
 		return this.enabled;

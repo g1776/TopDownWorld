@@ -1,4 +1,4 @@
-class Settings {
+export default class Settings {
 	// Program settings
 	public static readonly DEBUG: boolean = false;
 	public static readonly FLOATING_POINT_PRECISION: number = 3;
