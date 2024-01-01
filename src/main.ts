@@ -1,5 +1,6 @@
 import { Segment, Point } from "./primitives";
 import Graph, { GraphData } from "./math/graph";
+import Grid from "./math/grid";
 import { scale } from "./math/utils";
 import Editor from "interfaces/editor";
 import Appbar from "./appbar";
@@ -48,8 +49,14 @@ const world = loadFromLocalStorage<World, WorldData>(
 	(data) => World.load(data, graph),
 	new World(graph)
 );
+
+const grid = new Grid(100, 100, 1000);
+
 const viewport = new Viewport(myCanvas);
-const editors: Editor[] = [new GraphEditor(viewport, graph), new StopEditor(viewport, world)];
+const editors: Editor[] = [
+	new GraphEditor(viewport, graph, grid),
+	new StopEditor(viewport, world),
+];
 new Appbar(editors, world);
 
 // start the animation loop
@@ -71,5 +78,6 @@ function animate() {
 			editor.display();
 		}
 	});
+	grid.draw(ctx);
 	requestAnimationFrame(animate);
 }
