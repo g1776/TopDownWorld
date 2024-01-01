@@ -13,7 +13,7 @@ npm start
 
 ## Contributing
 
-Please use Prettier with the default settings to format your code.
+Please use Prettier with the default settings to format your code before submitting a pull request.
 
 ## Improvements from the original series
 
