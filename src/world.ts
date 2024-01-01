@@ -4,6 +4,11 @@ type CachedRender = {
 	segments: Segment[];
 };
 
+type WorldData = {
+	treesEnabled: boolean;
+	title: string;
+};
+
 class World {
 	roads: Road[];
 	roadBorders: Segment[];
@@ -26,6 +31,7 @@ class World {
 
 	constructor(
 		public graph: Graph,
+		public title = "My World",
 		public roadWidth = Settings.ROAD_WIDTH,
 		public roadRoundness = Settings.ROAD_ROUNDNESS,
 
@@ -49,6 +55,27 @@ class World {
 		this.roadBorders = [];
 
 		this.generate();
+	}
+
+	static load(worldData: WorldData, graph: Graph): World {
+		const world = new World(graph);
+		if (worldData.treesEnabled) {
+			world.enableTrees();
+		} else {
+			world.disableTrees();
+		}
+		world.title = worldData.title;
+		return world;
+	}
+
+	/**
+	 * Get the hash of the world data
+	 */
+	getWorldDataHash(): string {
+		return {
+			treesEnabled: this.treesEnabled,
+			title: this.title,
+		}.toString();
 	}
 
 	enableTrees() {

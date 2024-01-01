@@ -47,6 +47,14 @@ class Envelope extends AbstractPrimitive {
 		return new Polygon(points);
 	}
 
+	override equals(other: Envelope): boolean {
+		return (
+			this.poly.equals(other.poly) &&
+			this.roundness == other.roundness &&
+			this.width == other.width
+		);
+	}
+
 	draw(ctx: CanvasRenderingContext2D, options = {}): void {
 		this.poly.draw(ctx, options);
 	}

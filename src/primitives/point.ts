@@ -36,7 +36,7 @@ class Point extends AbstractPrimitive {
 	 * @param point - The point to compare for equality
 	 * @returns True if the points are equal, otherwise false
 	 */
-	equals(point: PointData): boolean {
+	equals(point: Point): boolean {
 		return this.x === point.x && this.y === point.y;
 	}
 

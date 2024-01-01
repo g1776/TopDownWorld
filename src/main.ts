@@ -1,24 +1,41 @@
+// setup the canvas
 const myCanvas = document.getElementById("myCanvas") as HTMLCanvasElement;
-
 myCanvas.width = window.innerWidth;
 myCanvas.height = window.innerHeight;
-
 const ctx = myCanvas.getContext("2d");
 
+// Define a default graph
 const p1 = new Point(200, 200);
 const p2 = new Point(500, 200);
-
 const s1 = new Segment(p1, p2);
+const defaultGraph = new Graph([p1, p2], [s1]);
 
-const graphString = localStorage.getItem("graph");
-const graphData: GraphData | null = graphString ? JSON.parse(graphString) : null;
+function loadFromLocalStorage<TargetClass, CacheData>(
+	key: string,
+	loader: (data: CacheData) => TargetClass,
+	defaultInstance: TargetClass
+): TargetClass {
+	const dataString = localStorage.getItem(key);
+	const loadedData: CacheData | null = dataString ? JSON.parse(dataString) : null;
+	return loadedData ? loader(loadedData) : defaultInstance;
+}
 
-const graph = graphData ? Graph.load(graphData) : new Graph([p1, p2], [s1]);
-const world = new World(graph);
+// load data from localStorage
+const graph = loadFromLocalStorage<Graph, GraphData>(
+	"graph",
+	(data) => Graph.load(data),
+	defaultGraph
+);
+const world = loadFromLocalStorage<World, WorldData>(
+	"world-data",
+	(data) => World.load(data, graph),
+	new World(graph)
+);
 const viewport = new Viewport(myCanvas);
 const editors: Editor[] = [new GraphEditor(viewport, graph), new StopEditor(viewport, world)];
 const controls = new Controls(editors, world);
 
+// start the animation loop
 let oldGraphHash = graph.hash();
 animate();
 function animate() {

@@ -1,0 +1,22 @@
+#appbar {
+    background-color: rgb(33, 33, 33);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px
+}
+
+#appbar-left {
+    margin: 0;
+    font-family: Arial;    
+}
+
+/* add margin of 5px between every immediate child element of appbar */
+#appbar-left > * {
+    margin-right: 5px;
+}
+
+#appbar-right > * {
+    margin-left: 5px;
+}

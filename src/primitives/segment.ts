@@ -24,8 +24,8 @@ class Segment extends AbstractPrimitive {
 	 */
 	static load(data: SegmentData, points: Point[]): Segment {
 		return new Segment(
-			points.find((p) => p.equals(data.p1))!,
-			points.find((p) => p.equals(data.p2))!
+			points.find((p) => p.equals(Point.load(data.p1)))!,
+			points.find((p) => p.equals(Point.load(data.p2)))!
 		);
 	}
 

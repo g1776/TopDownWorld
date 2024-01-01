@@ -1,12 +1,12 @@
 .button-group {
-    background-color: var(--primary-color);
     border-radius: 16px;
-    font-size: 0px;
+    display: inline;
 }
 
 .button-group > button {
     border-radius: 0;
     background-color: var(--primary-color);
+    margin-right: -5px;
 }
 
 .button-group > button:first-child {
@@ -17,6 +17,7 @@
 .button-group > button:last-child {
     border-top-right-radius: 16px;
     border-bottom-right-radius: 16px;
+    margin-right: 0px;
 }
 
 .button-group > button.selected {
