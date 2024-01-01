@@ -76,5 +76,9 @@ export default class Appbar {
 		this.addEventListener("mode-btn-view-only", () =>
 			this.setEditorMode(EditorMode.VIEW_ONLY)
 		);
+		this.addEventListener("checkbox-tree-toggle", () => {
+			this.treesEnabled = !this.treesEnabled;
+			this.toggleTrees(this.treesEnabled);
+		});
 	}
 }
