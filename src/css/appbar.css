@@ -30,16 +30,14 @@
 
 #appbar-center > h3 {
 	margin: 0;
-	font-family: Arial;
 }
 
 #appbar-right > * {
 	margin-left: 5px;
 }
 .info {
-    cursor: pointer;
+	cursor: pointer;
 	transition: filter 0.1s;
-	
 }
 
 .info:hover:not(:disabled) {

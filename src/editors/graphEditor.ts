@@ -4,22 +4,25 @@ import Graph from "../math/graph";
 import Viewport from "../viewport";
 import { getNearestPoint } from "../math/utils";
 import { EditorMode } from "../enums";
+import Grid from "math/grid";
+
+type GraphEditorPoint = Point & { fromGrid?: boolean };
 
 /** Represents an editor for interacting with a graph on a canvas */
 export default class GraphEditor implements Editor {
 	public readonly type = EditorMode.GRAPH;
 
 	/** The currently selected point in the editor */
-	private selected: Point | null = null;
+	private selected: GraphEditorPoint | null = null;
 
 	/** The currently hovered point in the editor */
-	private hovered: Point | null = null;
+	private hovered: GraphEditorPoint | null = null;
 
 	/** Indicates whether a dragging action is currently ongoing */
 	private dragging: boolean = false;
 
 	/** The location of the mouse on the canvas */
-	private mouse: Point | null = null;
+	private mouse: GraphEditorPoint | null = null;
 
 	/** The CanvasRenderingContext2D used for drawing on the canvas */
 	private ctx: CanvasRenderingContext2D;
@@ -28,6 +31,9 @@ export default class GraphEditor implements Editor {
 	private canvas: HTMLCanvasElement;
 
 	private enabled: boolean = false;
+
+	private snapToGrid: boolean = true;
+	private gridPoints: GraphEditorPoint[] = [];
 
 	/** Place to store event listeners between enable and disable */
 	private boundEventListeners: {
@@ -39,9 +45,11 @@ export default class GraphEditor implements Editor {
 	 * @param canvas - The HTMLCanvasElement associated with the editor
 	 * @param graph - The graph instance to edit
 	 */
-	constructor(public viewport: Viewport, public graph: Graph) {
+	constructor(public viewport: Viewport, public graph: Graph, public grid: Grid) {
 		this.ctx = this.viewport.ctx;
 		this.canvas = this.viewport.canvas;
+		this.gridPoints = this.grid.getPoints();
+		this.gridPoints.forEach((point) => (point.fromGrid = true));
 	}
 
 	save() {
@@ -74,6 +82,15 @@ export default class GraphEditor implements Editor {
 	enable(): void {
 		this.addEventListeners();
 		this.enabled = true;
+	}
+
+	enableGrid() {
+		this.snapToGrid = true;
+
+	}
+
+	disableGrid() {
+		this.snapToGrid = false;
 	}
 
 	/**
@@ -124,14 +141,16 @@ export default class GraphEditor implements Editor {
 		const RIGHT_CLICK = 2;
 
 		if (evt.button === LEFT_CLICK) {
-			if (this.hovered) {
+			if (this.hovered && this.graph.containsPoint(this.hovered)) {
 				this.selectPoint(this.hovered);
 				this.dragging = true;
 				return;
 			}
-			this.graph.addPoint(this.mouse);
-			this.selectPoint(this.mouse);
-			this.hovered = this.mouse;
+			// create a new point so we don't modify the grid point
+			const newPoint = new Point(this.mouse.x, this.mouse.y);
+			this.graph.addPoint(newPoint);
+			this.selectPoint(newPoint);
+			this.hovered = newPoint;
 		}
 
 		if (evt.button === RIGHT_CLICK) {
@@ -147,7 +166,43 @@ export default class GraphEditor implements Editor {
 
 	private handleMouseMove(evt: MouseEvent) {
 		this.mouse = this.viewport.getMouse(evt, true);
-		this.hovered = getNearestPoint(this.mouse, this.graph.points, 10 * this.viewport.zoom);
+
+		// optionally snap to grid, forcing the mouse to be on a grid point if close enough
+		let closestPoint: GraphEditorPoint = null;
+		if (this.snapToGrid) {
+			const closestGridPoint = getNearestPoint(
+				this.mouse,
+				this.gridPoints,
+				10 * this.viewport.zoom
+			);
+			const closestGraphPoint = getNearestPoint(
+				this.mouse,
+				this.graph.points,
+				10 * this.viewport.zoom
+			);
+			if (closestGridPoint.point && closestGraphPoint.point) {
+				if (closestGridPoint.distance < closestGraphPoint.distance) {
+					// closest to grid
+					this.mouse = closestGridPoint.point;
+					closestPoint = closestGridPoint.point;
+				} else {
+					// closest to graph
+					this.mouse = closestGraphPoint.point;
+					closestPoint = closestGraphPoint.point;
+				}
+			} else if (closestGridPoint.point) {
+				// closest to grid
+				this.mouse = closestGridPoint.point;
+				closestPoint = closestGridPoint.point;
+			} else if (closestGraphPoint.point) {
+				// closest to graph
+				this.mouse = closestGraphPoint.point;
+				closestPoint = closestGraphPoint.point;
+			}
+		}
+		this.hovered =
+			closestPoint ||
+			getNearestPoint(this.mouse, this.graph.points, 10 * this.viewport.zoom).point;
 		if (this.dragging) {
 			if (this.selected) {
 				this.selected.x = this.mouse.x;

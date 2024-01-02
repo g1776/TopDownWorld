@@ -14,26 +14,44 @@
 	<body>
 		<div id="appbar">
 			<div id="appbar-left">
-				<button class="fancy" id="action-btn-dispose">🗑️</button>
-				<button class="fancy" id="action-btn-save">💾</button>
+				<span class="tooltip"
+					><span class="tooltiptext">Clear</span>
+					<button class="fancy" id="action-btn-dispose">🗑️</button>
+				</span>
+
+				<span class="tooltip"
+					><span class="tooltiptext">Save</span>
+					<button class="fancy" id="action-btn-save">💾</button></span
+				>
 				<div id="mode-btns" class="button-group">
-					<button value="graph" id="mode-btn-graph">🌐</button>
-					<button value="stop" id="mode-btn-stop">🛑</button>
-					<button value="viewOnly" id="mode-btn-view-only">👁️</button>
+					<button value="graph" id="mode-btn-graph" class="tooltip">
+						<span class="tooltiptext">Graph</span>🌐
+					</button>
+					<button value="stop" id="mode-btn-stop" class="tooltip">
+						<span class="tooltiptext">Road Markings</span>🛑
+					</button>
+					<button value="viewOnly" id="mode-btn-view-only" class="tooltip">
+						<span class="tooltiptext">View Only</span>👁️
+					</button>
 				</div>
-				<span>🌲</span>
-				<label class="switch">
-					<input type="checkbox" id="checkbox-tree-toggle" />
-					<span class="slider round"></span>
-				</label>
+
+				<span class="tooltip"
+					><span class="tooltiptext">Toggle Trees</span>
+					<button class="toggle" id="tree-toggle">🌲</button>
+				</span>
+
+				<span class="tooltip"
+					><span class="tooltiptext">Toggle Grid</span>
+					<button class="toggle" id="grid-toggle"><span class="fa fa-th"></span></button>
 			</div>
 
 			<div id="appbar-center">
-				<h3>Top Down World</h3>
+				<!-- TODO make the title editable -->
+				<h3>My World</h3>
 			</div>
 
 			<div id="appbar-right">
-				<i class="fa fa-info-circle info" id="action-btn-info"></i>
+				<span id="info" class="fa fa-info-circle info"></span>
 			</div>
 		</div>
 		<canvas id="myCanvas"></canvas>

@@ -5,15 +5,18 @@ import { Point, Segment } from "../primitives";
  * @param loc - The reference point for which the nearest point is to be found
  * @param points - Array of points to search from
  * @param threshold - The maximum distance within which to consider a point as nearest (default is maximum safe integer)
- * @returns The nearest point within the threshold, or null if no point is found
+ * @returns The nearest point and its distance from the reference point if it exists, otherwise null
  */
 export function getNearestPoint(
 	loc: Point,
 	points: Point[],
 	threshold = Number.MAX_SAFE_INTEGER
-): Point | null {
+): {
+	point: Point;
+	distance: number;
+} | null {
 	let minDist = Number.MAX_SAFE_INTEGER;
-	let nearest: Point | null = null;
+	let closestPoint: Point | null = null;
 
 	points.forEach((point) => {
 		// Ignore itself
@@ -23,11 +26,14 @@ export function getNearestPoint(
 		const dist = distance(point, loc);
 		if (dist < minDist && dist < threshold) {
 			minDist = dist;
-			nearest = point;
+			closestPoint = point;
 		}
 	});
 
-	return nearest;
+	return {
+		point: closestPoint,
+		distance: minDist,
+	};
 }
 
 export function getNearestSegment(

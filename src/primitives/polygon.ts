@@ -140,18 +140,30 @@ export default class Polygon extends AbstractPrimitive {
 
 	draw(
 		ctx: CanvasRenderingContext2D,
-		{ stroke = "blue", lineWidth = 2, fill = "rgba(0,0,255,0.3)" } = {}
+		{
+			stroke = "blue",
+			lineWidth = 2,
+			fill = "rgba(0,0,255,0.3)",
+			dash = [],
+		}: {
+			stroke?: string;
+			lineWidth?: number;
+			fill?: string;
+			dash?: number[];
+		} = {}
 	) {
 		if (this.points.length == 0) return;
 		ctx.beginPath();
 		ctx.fillStyle = fill;
 		ctx.strokeStyle = stroke;
 		ctx.lineWidth = lineWidth;
+		ctx.setLineDash(dash);
 		ctx.moveTo(this.points[0].x, this.points[0].y);
 		this.points.forEach((p) => ctx.lineTo(p.x, p.y));
 		ctx.closePath();
 		ctx.fill();
 		ctx.stroke();
+		ctx.setLineDash([]);
 	}
 
 	hash(): string {
