@@ -29,10 +29,10 @@ Example Usage:
   .slider {
     position: absolute;
     cursor: pointer;
-    top: 75%;
+    top: 20%;
     left: 0;
     right: 0;
-    bottom: -75%;
+    bottom: -20%;
     background-color: #ccc;
     -webkit-transition: .4s;
     transition: .4s;

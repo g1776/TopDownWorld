@@ -1,15 +1,21 @@
 import Editor from "./interfaces/editor";
 import { EditorMode } from "./enums";
 import World from "world";
+import { GraphEditor } from "editors";
 
 export default class Appbar {
 	// set the default mode here
 	private mode: EditorMode = EditorMode.GRAPH;
 	private treesEnabled: boolean = false;
+	private gridEnabled: boolean = false;
 
 	constructor(public editors: Editor[], private world: World) {
 		this.setEditorMode(this.mode);
 		this.addEventListeners();
+	}
+
+	public isGridEnabled(): boolean {
+		return this.gridEnabled;
 	}
 
 	private save() {
@@ -30,6 +36,18 @@ export default class Appbar {
 			this.world.enableTrees();
 		} else {
 			this.world.disableTrees();
+		}
+	}
+
+	private toggleGrid(enabled: boolean) {
+		this.gridEnabled = enabled;
+		const graphEditor = this.editors.find((e) => e.type === EditorMode.GRAPH) as GraphEditor;
+		if (graphEditor) {
+			if (enabled) {
+				graphEditor.enableGrid();
+			} else {
+				graphEditor.disableGrid();
+			}
 		}
 	}
 
@@ -65,7 +83,7 @@ export default class Appbar {
 		this.world.title = title;
 	}
 
-	private addEventListener(id: string, callback: any) {
+	private addClickListener(id: string, callback: any) {
 		const element = document.getElementById(id);
 		if (element) {
 			element.addEventListener("click", callback.bind(this));
@@ -73,16 +91,23 @@ export default class Appbar {
 	}
 
 	private addEventListeners() {
-		this.addEventListener("action-btn-dispose", this.dispose);
-		this.addEventListener("action-btn-save", this.save);
-		this.addEventListener("mode-btn-graph", () => this.setEditorMode(EditorMode.GRAPH));
-		this.addEventListener("mode-btn-stop", () => this.setEditorMode(EditorMode.STOP));
-		this.addEventListener("mode-btn-view-only", () =>
+		this.addClickListener("action-btn-dispose", this.dispose);
+		this.addClickListener("action-btn-save", this.save);
+		this.addClickListener("mode-btn-graph", () => this.setEditorMode(EditorMode.GRAPH));
+		this.addClickListener("mode-btn-stop", () => this.setEditorMode(EditorMode.STOP));
+		this.addClickListener("mode-btn-view-only", () =>
 			this.setEditorMode(EditorMode.VIEW_ONLY)
 		);
-		this.addEventListener("checkbox-tree-toggle", () => {
-			this.treesEnabled = !this.treesEnabled;
+		this.addClickListener("tree-toggle", () => {
+			this.treesEnabled = document.getElementById("tree-toggle")!.classList.toggle("active");
 			this.toggleTrees(this.treesEnabled);
 		});
+		this.addClickListener("grid-toggle", () => {
+			const gridEnabled = document.getElementById("grid-toggle")!.classList.toggle("active");
+			this.toggleGrid(gridEnabled);
+		});
+		this.addClickListener("info", () =>
+			alert("Created by Gregory Glatzer. Based on the tutorial by Radu on FreeCodeCamp.org")
+		);
 	}
 }

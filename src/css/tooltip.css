@@ -1,0 +1,31 @@
+.tooltip {
+	position: relative;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.tooltip .tooltiptext {
+	visibility: hidden;
+	padding-left: 10px;
+	padding-right: 10px;
+	width: auto; /* Let the width be determined by the content */
+	background-color: #55555595;
+	text-transform: none;
+	font-weight: normal;
+	color: #fff;
+	text-align: center;
+	border-radius: 6px;
+	position: absolute;
+	font-size: 12px;
+	z-index: 1;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%) translateY(10px); /* Center the tooltip horizontally and push it down 10 pixels */
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+}

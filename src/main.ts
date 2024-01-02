@@ -10,11 +10,14 @@ import { GraphEditor, StopEditor } from "./editors";
 
 // styles
 import "./css/appbar.css";
-import "./css/button-group.css";
-import "./css/button.css";
+import "./css/button/toggle.css";
+import "./css/button/button.css";
+import "./css/button/button-group.css";
+import "./css/button/fancy.css";
 import "./css/main.css";
 import "./css/switch.css";
 import "./css/vars.css";
+import "./css/tooltip.css";
 
 // setup the canvas
 const myCanvas = document.getElementById("myCanvas") as HTMLCanvasElement;
@@ -57,7 +60,7 @@ const editors: Editor[] = [
 	new GraphEditor(viewport, graph, grid),
 	new StopEditor(viewport, world),
 ];
-new Appbar(editors, world);
+const appbar = new Appbar(editors, world);
 
 // start the animation loop
 let oldGraphHash = graph.hash();
@@ -78,6 +81,8 @@ function animate() {
 			editor.display();
 		}
 	});
-	grid.draw(ctx);
+	if (appbar.isGridEnabled()) {
+		grid.draw(ctx);
+	}
 	requestAnimationFrame(animate);
 }

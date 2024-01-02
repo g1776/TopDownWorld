@@ -84,6 +84,15 @@ export default class GraphEditor implements Editor {
 		this.enabled = true;
 	}
 
+	enableGrid() {
+		this.snapToGrid = true;
+
+	}
+
+	disableGrid() {
+		this.snapToGrid = false;
+	}
+
 	/**
 	 * Displays the graph and points on the canvas
 	 */
