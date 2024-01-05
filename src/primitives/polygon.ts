@@ -117,8 +117,20 @@ export default class Polygon extends AbstractPrimitive {
 		return false;
 	}
 
+	/**
+	 * @description Checks if the current polygon is completely contained by another polygon.
+	 * @param poly
+	 */
+	containedByPoly(poly: Polygon): boolean {
+		return this.points.every((point) => poly.containsPoint(point));
+	}
+
 	distanceToPoint(point: Point): number {
 		return Math.min(...this.segments.map((seg) => seg.distanceToPoint(point)));
+	}
+
+	distanceToPoly(poly: Polygon): number {
+		return Math.min(...poly.points.map((point) => this.distanceToPoint(point)));
 	}
 
 	containsSegment(seg: Segment): boolean {

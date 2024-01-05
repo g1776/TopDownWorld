@@ -4,9 +4,11 @@ import { add, distance, lerp, scale } from "./math/utils";
 import { Road, Building, Tree } from "./items";
 import Primitive from "./interfaces/primitive";
 import Settings from "./settings";
+import Grid from "./math/grid";
+import Quadtree from "@timohausmann/quadtree-js";
 
 type CachedRender = {
-	roadBorders: Segment[];
+	roadBases: Polygon[];
 	buildings: Building[];
 	segments: Segment[];
 };
@@ -23,15 +25,12 @@ export default class World {
 	trees: Set<Tree> = new Set();
 	laneGuides: Segment[] = [];
 
+	cellsToPickFrom: Polygon[] = [];
+
 	private treesEnabled = false;
 
-	/**
-	 * If true, the world will be regenerated on the next render.
-	 */
-	private regenerateAllTrees = false;
-
 	private lastRender: CachedRender = {
-		roadBorders: [],
+		roadBases: [],
 		buildings: [],
 		segments: [],
 	};
@@ -87,13 +86,11 @@ export default class World {
 
 	enableTrees() {
 		this.treesEnabled = true;
-		this.regenerateAllTrees = true;
 		this.generate();
 	}
 
 	disableTrees() {
 		this.treesEnabled = false;
-		this.regenerateAllTrees = true;
 		this.generate();
 	}
 
@@ -110,10 +107,37 @@ export default class World {
 		this.laneGuides = this.generateLaneGuides();
 
 		this.lastRender = {
-			roadBorders: this.roadBorders,
+			roadBases: this.roads.map((r) => r.base),
 			buildings: this.buildings,
 			segments: this.graph.segments,
 		};
+	}
+
+	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
+		this.roads.forEach((road) => road.draw(ctx));
+
+		// draw dashed lines on the road
+		this.graph.segments.forEach((seg) =>
+			seg.draw(ctx, { color: "white", width: 3, dash: [10, 10] })
+		);
+		this.roadBorders.forEach((seg) => seg.draw(ctx));
+
+		// sort and draw all the items in 3D
+		[...this.buildings, ...this.trees]
+			.sort((a, b) => b.base.distanceToPoint(viewPoint) - a.base.distanceToPoint(viewPoint))
+			.forEach((item) => {
+				item.draw(ctx, viewPoint);
+			});
+
+		if (Settings.DEBUG) {
+			// Render the available cells for trees to generate in
+			const newTreeCellColor = "rgba(125,0,0,0.5)";
+			if (this.cellsToPickFrom.length > 0) {
+				this.cellsToPickFrom.forEach((cell) => {
+					cell.draw(ctx, { fill: newTreeCellColor });
+				});
+			}
+		}
 	}
 
 	private generateBuildings(): Building[] {
@@ -203,87 +227,76 @@ export default class World {
 			return new Set();
 		}
 
-		let newRoadBorders: Segment[];
-		let newBuildingBases: Polygon[];
-
-		if (this.regenerateAllTrees) {
-			this.regenerateAllTrees = false;
-			newRoadBorders = this.roadBorders;
-			newBuildingBases = this.buildings.map((b) => b.base);
-		} else {
-			// determine the new roadBorders and buildings since the last render
-			newRoadBorders = this.getNewPrimitivesSinceLastRender(
-				this.roadBorders,
-				this.lastRender.roadBorders
-			) as Segment[];
-			newBuildingBases = this.getNewPrimitivesSinceLastRender(
-				this.buildings.map((b) => b.base),
-				this.lastRender.buildings.map((b) => b.base)
-			) as Polygon[];
-		}
-
-		// if there are no new road borders or building bases, we can use the same trees from the last render
-		if (newRoadBorders.length === 0 && newBuildingBases.length === 0) {
-			return this.trees;
-		}
-
-		// Determine the bounds that trees can be generated in
-		const points = [
-			...newRoadBorders.map((seg) => [seg.p1, seg.p2]).flat(),
-			...newBuildingBases.map((b) => b.points).flat(),
-		];
-
-		// Determine the bounds that trees can be generated in
-		let left = Infinity;
-		let right = -Infinity;
-		let top = Infinity;
-		let bottom = -Infinity;
-
-		for (const p of points) {
-			if (p.x < left) left = p.x;
-			if (p.x > right) right = p.x;
-			if (p.y < top) top = p.y;
-			if (p.y > bottom) bottom = p.y;
-		}
-
 		// We dont want to generate trees on the road or in buildings
-		const illegalPolys = new Set([
+		const illegalPolys = [
 			...this.buildings.map((b) => b.base),
 			...this.roads.map((road) => road.base),
-		]);
+		];
+		// for new trees, only consider the new roads and buildings since the last render
+
+		// use grids to break up the problem of available locations for trees into cells
+		const arbitraryCellSize = 200;
+		const grid = Grid.fromRangeOfPolys(illegalPolys, arbitraryCellSize);
+		// mark cells that intersect with the roads or buildings as excluded
+		grid.subsetOn(illegalPolys, "exclude");
+
+		let cellsToPickFrom = grid.getCells(true).filter((cell) => {
+			// check the cell is near an illegal poly
+			const nearIllegalPoly = illegalPolys.some((poly) => {
+				return poly.distanceToPoly(cell) < this.treeRadius * 2;
+			});
+			return nearIllegalPoly;
+		});
+		this.cellsToPickFrom = cellsToPickFrom;
 
 		const newTrees: Set<Tree> = new Set();
-		const closestGraphSegments = new Map<Tree, Segment>();
-
-		// validate old tree locations
-		for (const oldTree of this.trees) {
-			if (this.validateTreeLocation(oldTree.center, illegalPolys, newTrees)) {
-				newTrees.add(oldTree);
-			}
-		}
+		const quadTree = new Quadtree({
+			x: 0,
+			y: 0,
+			width: grid.getWidth(),
+			height: grid.getHeight(),
+		});
 
 		let tryCount = 0;
 		const treeCountScaleFactor = 100 * Settings.TREE_COUNT_SCALE_FACTOR;
 
 		while (tryCount < treeCountScaleFactor) {
-			// generate a random point in the bounds
-			const randX = Math.random();
-			const randY = Math.random();
-			const p = new Point(lerp(left, right, randX), lerp(bottom, top, randY));
+			// choose a random cell
+			const cellIdx = Math.floor(Math.random() * cellsToPickFrom.length);
+			const cell = cellsToPickFrom[cellIdx];
+			// generate a random point in the bounds of the cell
+			const minX = cell.points[0].x;
+			const maxX = cell.points[1].x;
+			const minY = cell.points[0].y;
+			const maxY = cell.points[3].y;
+			const p = new Point(lerp(minX, maxX, Math.random()), lerp(minY, maxY, Math.random()));
 
-			// validate the point
-			const keep = this.validateTreeLocation(p, illegalPolys, newTrees);
+			// add the point if this location is valid
+			// make sure the tree is not too close to another tree
+			// We use a quadtree to not have to check every tree
+			let tooCloseToAnotherTree = false;
+			const nearbyTrees = quadTree.retrieve({
+				x: p.x,
+				y: p.y,
+				width: this.treeRadius * 2,
+				height: this.treeRadius * 2,
+			});
 
-			// find the closest graph segment to the tree and set it as the parent
-			const closestGraphSegment = this.graph.segments.reduce((prev, curr) =>
-				curr.distanceToPoint(p) < prev.distanceToPoint(p) ? curr : prev
-			);
-			p.setParent(closestGraphSegment);
-
-			if (keep) {
+			for (const treeRect of nearbyTrees) {
+				if (distance(new Point(treeRect.x, treeRect.y), p) < this.treeRadius) {
+					tooCloseToAnotherTree = true;
+					break;
+				}
+			}
+			if (!tooCloseToAnotherTree) {
 				const newTree = new Tree(p, this.treeRadius, this.treeHeight);
 				newTrees.add(newTree);
-				closestGraphSegments.set(newTree, closestGraphSegment);
+				quadTree.insert({
+					x: p.x,
+					y: p.y,
+					width: this.treeRadius * 2,
+					height: this.treeRadius * 2,
+				});
 				tryCount = 0;
 			}
 			tryCount++;
@@ -325,11 +338,11 @@ export default class World {
 		return laneGuides;
 	}
 
-	private getNewPrimitivesSinceLastRender(
-		currPrimitives: Primitive[],
-		lastRenderPrimitives: Primitive[]
-	): Primitive[] {
-		let newPrimitives: Primitive[] = [];
+	private getNewPrimitivesSinceLastRender<PrimitiveType extends Primitive>(
+		currPrimitives: PrimitiveType[],
+		lastRenderPrimitives: PrimitiveType[]
+	): PrimitiveType[] {
+		let newPrimitives: PrimitiveType[] = [];
 
 		// Create a set with the hashes of the lastRenderPrimitives
 		let lastRenderHashes = new Set(lastRenderPrimitives.map((p) => p.hash()));
@@ -346,26 +359,26 @@ export default class World {
 
 	private validateTreeLocation(
 		p: Point,
-		illegalPolys: Set<Polygon>,
+		availableCells: Polygon[],
+		illegalPolys: Polygon[],
 		otherTrees: Set<Tree>
 	): boolean {
 		const numTreesToPadWith = 2;
 		let closeToSomething = false;
 
-		// make sure the tree is not in an illegal polygon and is close to something
-		for (const poly of illegalPolys) {
-			if (poly.containsPoint(p) || poly.distanceToPoint(p) < this.treeRadius / 2) {
-				return false;
-			}
-
-			if (
-				!closeToSomething &&
-				poly.distanceToPoint(p) < this.treeRadius * numTreesToPadWith
-			) {
-				closeToSomething = true;
-			}
+		// make sure the tree is in an available cell
+		const inACell = availableCells.some((cell) => cell.containsPoint(p));
+		if (!inACell) {
+			return false;
 		}
 
+		// make sure the tree is close to some object
+		for (const poly of illegalPolys) {
+			if (poly.distanceToPoint(p) < this.treeRadius * numTreesToPadWith) {
+				closeToSomething = true;
+				break;
+			}
+		}
 		if (!closeToSomething) {
 			return false;
 		}
@@ -378,22 +391,5 @@ export default class World {
 		}
 
 		return true;
-	}
-
-	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
-		this.roads.forEach((road) => road.draw(ctx));
-
-		// draw dashed lines on the road
-		this.graph.segments.forEach((seg) =>
-			seg.draw(ctx, { color: "white", width: 3, dash: [10, 10] })
-		);
-		this.roadBorders.forEach((seg) => seg.draw(ctx));
-
-		// sort and draw all the items in 3D
-		[...this.buildings, ...this.trees]
-			.sort((a, b) => b.base.distanceToPoint(viewPoint) - a.base.distanceToPoint(viewPoint))
-			.forEach((item) => {
-				item.draw(ctx, viewPoint);
-			});
 	}
 }

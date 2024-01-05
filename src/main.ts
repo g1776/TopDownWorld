@@ -7,6 +7,7 @@ import Appbar from "./appbar";
 import Viewport from "./viewport";
 import World, { WorldData } from "./world";
 import { GraphEditor, StopEditor } from "./editors";
+import Settings from "./settings";
 
 // styles
 import "./css/appbar.css";
@@ -62,6 +63,13 @@ const editors: Editor[] = [
 ];
 const appbar = new Appbar(editors, world);
 
+let mouse: Point | null = null;
+if (Settings.DEBUG) {
+	myCanvas.addEventListener("mousemove", (e) => {
+		mouse = viewport.getMouse(e);
+	});
+}
+
 // start the animation loop
 let oldGraphHash = graph.hash();
 animate();
@@ -84,5 +92,13 @@ function animate() {
 	if (appbar.isGridEnabled()) {
 		grid.draw(ctx);
 	}
+
+	if (Settings.DEBUG && mouse) {
+		// draw the coordinates of the mouse, at the mouse position
+		ctx.font = "30px Arial";
+		ctx.fillStyle = "black";
+		ctx.fillText(`${mouse.x}, ${mouse.y}`, mouse.x, mouse.y);
+	}
+
 	requestAnimationFrame(animate);
 }
