@@ -150,6 +150,25 @@ export default class Polygon extends AbstractPrimitive {
 		return intersectionCount % 2 == 1;
 	}
 
+	getBoundingBox(): {
+		minX: number;
+		minY: number;
+		maxX: number;
+		maxY: number;
+	} {
+		const minX = Math.min(...this.points.map((point) => point.x));
+		const minY = Math.min(...this.points.map((point) => point.y));
+		const maxX = Math.max(...this.points.map((point) => point.x));
+		const maxY = Math.max(...this.points.map((point) => point.y));
+		return { minX, minY, maxX, maxY };
+	}
+
+	getCenter(): Point {
+		const x = this.points.reduce((acc, point) => acc + point.x, 0) / this.points.length;
+		const y = this.points.reduce((acc, point) => acc + point.y, 0) / this.points.length;
+		return new Point(x, y);
+	}
+
 	draw(
 		ctx: CanvasRenderingContext2D,
 		{

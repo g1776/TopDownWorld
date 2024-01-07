@@ -7,12 +7,6 @@ import Settings from "./settings";
 import Grid from "./math/grid";
 import Quadtree from "@timohausmann/quadtree-js";
 
-type CachedRender = {
-	roadBases: Polygon[];
-	buildings: Building[];
-	segments: Segment[];
-};
-
 export type WorldData = {
 	treesEnabled: boolean;
 	title: string;
@@ -22,18 +16,9 @@ export default class World {
 	roads: Road[];
 	roadBorders: Segment[];
 	buildings: Building[] = [];
-	trees: Set<Tree> = new Set();
+	trees: Tree[] = [];
 	laneGuides: Segment[] = [];
-
-	cellsToPickFrom: Polygon[] = [];
-
 	private treesEnabled = false;
-
-	private lastRender: CachedRender = {
-		roadBases: [],
-		buildings: [],
-		segments: [],
-	};
 
 	constructor(
 		public graph: Graph,
@@ -103,14 +88,8 @@ export default class World {
 
 		this.roadBorders = Polygon.union(this.roads.map((road) => road.base));
 		this.buildings = this.generateBuildings();
-		this.trees = this.treesEnabled ? this.generateTrees() : new Set();
+		this.trees = this.treesEnabled ? this.generateTrees() : [];
 		this.laneGuides = this.generateLaneGuides();
-
-		this.lastRender = {
-			roadBases: this.roads.map((r) => r.base),
-			buildings: this.buildings,
-			segments: this.graph.segments,
-		};
 	}
 
 	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
@@ -128,16 +107,6 @@ export default class World {
 			.forEach((item) => {
 				item.draw(ctx, viewPoint);
 			});
-
-		if (Settings.DEBUG) {
-			// Render the available cells for trees to generate in
-			const newTreeCellColor = "rgba(125,0,0,0.5)";
-			if (this.cellsToPickFrom.length > 0) {
-				this.cellsToPickFrom.forEach((cell) => {
-					cell.draw(ctx, { fill: newTreeCellColor });
-				});
-			}
-		}
 	}
 
 	private generateBuildings(): Building[] {
@@ -222,9 +191,9 @@ export default class World {
 		return bases.map((b) => new Building(b));
 	}
 
-	private generateTrees(): Set<Tree> {
+	private generateTrees(): Tree[] {
 		if (this.graph.segments.length === 0) {
-			return new Set();
+			return [];
 		}
 
 		// We dont want to generate trees on the road or in buildings
@@ -232,65 +201,38 @@ export default class World {
 			...this.buildings.map((b) => b.base),
 			...this.roads.map((road) => road.base),
 		];
-		// for new trees, only consider the new roads and buildings since the last render
 
-		// use grids to break up the problem of available locations for trees into cells
-		const arbitraryCellSize = 200;
-		const grid = Grid.fromRangeOfPolys(illegalPolys, arbitraryCellSize);
-		// mark cells that intersect with the roads or buildings as excluded
-		grid.subsetOn(illegalPolys, "exclude");
-
-		let cellsToPickFrom = grid.getCells(true).filter((cell) => {
-			// check the cell is near an illegal poly
-			const nearIllegalPoly = illegalPolys.some((poly) => {
-				return poly.distanceToPoly(cell) < this.treeRadius * 2;
+		// calcualte the bounds to generate trees in
+		let minX: number, maxX: number, minY: number, maxY: number;
+		illegalPolys.forEach((poly) => {
+			poly.points.forEach((point) => {
+				if (minX === undefined || point.x < minX) minX = point.x;
+				if (maxX === undefined || point.x > maxX) maxX = point.x;
+				if (minY === undefined || point.y < minY) minY = point.y;
+				if (maxY === undefined || point.y > maxY) maxY = point.y;
 			});
-			return nearIllegalPoly;
 		});
-		this.cellsToPickFrom = cellsToPickFrom;
 
-		const newTrees: Set<Tree> = new Set();
+		const newTrees = [];
 		const quadTree = new Quadtree({
 			x: 0,
 			y: 0,
-			width: grid.getWidth(),
-			height: grid.getHeight(),
+			width: maxX - minX,
+			height: maxY - minY,
 		});
 
 		let tryCount = 0;
 		const treeCountScaleFactor = 100 * Settings.TREE_COUNT_SCALE_FACTOR;
 
 		while (tryCount < treeCountScaleFactor) {
-			// choose a random cell
-			const cellIdx = Math.floor(Math.random() * cellsToPickFrom.length);
-			const cell = cellsToPickFrom[cellIdx];
-			// generate a random point in the bounds of the cell
-			const minX = cell.points[0].x;
-			const maxX = cell.points[1].x;
-			const minY = cell.points[0].y;
-			const maxY = cell.points[3].y;
+			// generate a random point in the bounds
 			const p = new Point(lerp(minX, maxX, Math.random()), lerp(minY, maxY, Math.random()));
 
-			// add the point if this location is valid
-			// make sure the tree is not too close to another tree
-			// We use a quadtree to not have to check every tree
-			let tooCloseToAnotherTree = false;
-			const nearbyTrees = quadTree.retrieve({
-				x: p.x,
-				y: p.y,
-				width: this.treeRadius * 2,
-				height: this.treeRadius * 2,
-			});
+			const validTreeLocation = this.validateTreeLocation(p, quadTree, illegalPolys);
 
-			for (const treeRect of nearbyTrees) {
-				if (distance(new Point(treeRect.x, treeRect.y), p) < this.treeRadius) {
-					tooCloseToAnotherTree = true;
-					break;
-				}
-			}
-			if (!tooCloseToAnotherTree) {
+			if (validTreeLocation) {
 				const newTree = new Tree(p, this.treeRadius, this.treeHeight);
-				newTrees.add(newTree);
+				newTrees.push(newTree);
 				quadTree.insert({
 					x: p.x,
 					y: p.y,
@@ -298,6 +240,7 @@ export default class World {
 					height: this.treeRadius * 2,
 				});
 				tryCount = 0;
+				continue;
 			}
 			tryCount++;
 		}
@@ -358,36 +301,52 @@ export default class World {
 	}
 
 	private validateTreeLocation(
-		p: Point,
-		availableCells: Polygon[],
-		illegalPolys: Polygon[],
-		otherTrees: Set<Tree>
+		loc: Point,
+		quadTree: Quadtree,
+		illegalPolys: Polygon[]
 	): boolean {
-		const numTreesToPadWith = 2;
-		let closeToSomething = false;
+		// make sure the tree is not too close to another tree
+		// We use a quadtree to not have to check every tree
+		let tooCloseToAnotherTree = false;
+		const nearbyTrees = quadTree.retrieve({
+			x: loc.x,
+			y: loc.y,
+			width: this.treeRadius * 2,
+			height: this.treeRadius * 2,
+		});
+		for (const treeRect of nearbyTrees) {
+			if (distance(new Point(treeRect.x, treeRect.y), loc) < this.treeRadius) {
+				tooCloseToAnotherTree = true;
+				break;
+			}
+		}
+		if (tooCloseToAnotherTree) {
+			return false;
+		}
 
-		// make sure the tree is in an available cell
-		const inACell = availableCells.some((cell) => cell.containsPoint(p));
-		if (!inACell) {
+		// make sure the tree is not inside an illegal poly
+		let insideIllegalPoly = false;
+		const treeBase = new Tree(loc, this.treeRadius, this.treeHeight).base;
+		for (const poly of illegalPolys) {
+			if (poly.intersectsPoly(treeBase) || treeBase.containedByPoly(poly)) {
+				insideIllegalPoly = true;
+				break;
+			}
+		}
+		if (insideIllegalPoly) {
 			return false;
 		}
 
 		// make sure the tree is close to some object
+		let closeToSomething = false;
 		for (const poly of illegalPolys) {
-			if (poly.distanceToPoint(p) < this.treeRadius * numTreesToPadWith) {
+			if (poly.distanceToPoint(loc) < this.treeRadius * 2) {
 				closeToSomething = true;
 				break;
 			}
 		}
 		if (!closeToSomething) {
 			return false;
-		}
-
-		// make sure the tree is not too close to another tree
-		for (const tree of otherTrees) {
-			if (distance(tree.center, p) < this.treeRadius) {
-				return false;
-			}
 		}
 
 		return true;

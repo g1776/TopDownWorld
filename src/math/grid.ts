@@ -30,11 +30,15 @@ export default class Grid {
 	 * @description Creates a grid that covers the given polygons, with the given cell size
 	 * @param polys The polygons to cover
 	 * @param cellSize The size of each cell
+	 * @param mode Whether to include/exclude cells that intersect with the given polygons, or keep all cells. Defaults to "all"
 	 * @returns A grid that covers the given polygons, with the given cell size
 	 */
-	static fromRangeOfPolys(polys: Polygon[], cellSize: number): Grid {
+	static fromRangeOfPolys(
+		polys: Polygon[],
+		cellSize: number,
+		mode: "all" | "include" | "exclude" = "all"
+	): Grid {
 		if (polys.length === 0) return new Grid(0, 0, cellSize);
-
 		let minX: number, maxX: number, minY: number, maxY: number;
 		polys.forEach((poly) => {
 			poly.points.forEach((point) => {
@@ -53,6 +57,9 @@ export default class Grid {
 			cellSize,
 			centeringOffset
 		);
+
+		if (mode === "all") return instance;
+		instance.subsetOn(polys, mode);
 		return instance;
 	}
 
@@ -76,7 +83,7 @@ export default class Grid {
 		const centeringOffset = this.getCenteringOffset();
 		this.cells.forEach((row, i) =>
 			row.forEach((cell, j) => {
-				// skip calculating for cells that are already excluded (in other worlds, keep them excluded)
+				// skip calculating for cells that are already excluded (in other words, keep them excluded)
 				if (cell.excluded) return;
 
 				const offsetCell = new Polygon(
