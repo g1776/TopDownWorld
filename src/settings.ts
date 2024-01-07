@@ -1,6 +1,6 @@
 export default class Settings {
 	// Program settings
-	public static readonly DEBUG: boolean = true;
+	public static readonly DEBUG: boolean = false;
 	public static readonly FLOATING_POINT_PRECISION: number = 3;
 
 	// Editor settings
@@ -24,9 +24,9 @@ export default class Settings {
 	public static readonly TREE_COUNT_SCALE_FACTOR: number = 0.3;
 
 	// Building settings
-	public static readonly BUILDING_WIDTH: number = 150;
-	public static readonly BUILDING_MIN_LENGTH: number = 150;
-	public static readonly BUILDING_SPACING: number = 100;
+	public static readonly BUILDING_WIDTH: number = 75;
+	public static readonly BUILDING_MIN_LENGTH: number = 75;
+	public static readonly BUILDING_SPACING: number = 50;
 	public static readonly BUILDING_HEIGHT: number = 0.1;
 	public static readonly BUILDING_ROOF_HEIGHT: number = 0.05;
 	public static readonly BUILDING_COLOR: string = "#e8e1cf";

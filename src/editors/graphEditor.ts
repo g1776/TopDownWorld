@@ -56,13 +56,7 @@ export default class GraphEditor implements Editor {
 		localStorage.setItem("graph", JSON.stringify(this.graph));
 	}
 
-	dispose(promptFirst: boolean = true) {
-		if (promptFirst) {
-			const response = confirm(
-				"Are you sure you want to clear? Any unsaved progress will be lost."
-			);
-			if (!response) return;
-		}
+	dispose() {
 		this.graph.dispose();
 		this.selected = null;
 		this.hovered = null;
@@ -86,7 +80,6 @@ export default class GraphEditor implements Editor {
 
 	enableGrid() {
 		this.snapToGrid = true;
-
 	}
 
 	disableGrid() {

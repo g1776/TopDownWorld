@@ -6,7 +6,7 @@ import Editor from "interfaces/editor";
 import Appbar from "./appbar";
 import Viewport from "./viewport";
 import World, { WorldData } from "./world";
-import { GraphEditor, StopEditor } from "./editors";
+import { GraphEditor, StopEditor, CrossingEditor, StartEditor } from "./editors";
 import Settings from "./settings";
 
 // styles
@@ -19,7 +19,6 @@ import "./css/main.css";
 import "./css/switch.css";
 import "./css/vars.css";
 import "./css/tooltip.css";
-
 // setup the canvas
 const myCanvas = document.getElementById("myCanvas") as HTMLCanvasElement;
 myCanvas.width = window.innerWidth;
@@ -60,6 +59,8 @@ const viewport = new Viewport(myCanvas);
 const editors: Editor[] = [
 	new GraphEditor(viewport, graph, grid),
 	new StopEditor(viewport, world),
+	new CrossingEditor(viewport, world),
+	new StartEditor(viewport, world),
 ];
 const appbar = new Appbar(editors, world);
 

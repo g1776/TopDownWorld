@@ -6,6 +6,7 @@ import Primitive from "./interfaces/primitive";
 import Settings from "./settings";
 import Grid from "./math/grid";
 import Quadtree from "@timohausmann/quadtree-js";
+import Marking from "interfaces/marking";
 
 export type WorldData = {
 	treesEnabled: boolean;
@@ -18,6 +19,7 @@ export default class World {
 	buildings: Building[] = [];
 	trees: Tree[] = [];
 	laneGuides: Segment[] = [];
+	markings: Marking[] = [];
 	private treesEnabled = false;
 
 	constructor(
@@ -49,13 +51,12 @@ export default class World {
 	}
 
 	static load(worldData: WorldData, graph: Graph): World {
-		const world = new World(graph);
+		const world = new World(graph, worldData.title);
 		if (worldData.treesEnabled) {
 			world.enableTrees();
 		} else {
 			world.disableTrees();
 		}
-		world.title = worldData.title;
 		return world;
 	}
 
@@ -94,6 +95,9 @@ export default class World {
 
 	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
 		this.roads.forEach((road) => road.draw(ctx));
+
+		// draw markings
+		this.markings.forEach((marking) => marking.draw(ctx));
 
 		// draw dashed lines on the road
 		this.graph.segments.forEach((seg) =>
@@ -281,25 +285,6 @@ export default class World {
 		return laneGuides;
 	}
 
-	private getNewPrimitivesSinceLastRender<PrimitiveType extends Primitive>(
-		currPrimitives: PrimitiveType[],
-		lastRenderPrimitives: PrimitiveType[]
-	): PrimitiveType[] {
-		let newPrimitives: PrimitiveType[] = [];
-
-		// Create a set with the hashes of the lastRenderPrimitives
-		let lastRenderHashes = new Set(lastRenderPrimitives.map((p) => p.hash()));
-
-		for (const currPrimitive of currPrimitives) {
-			// If the hash of the current primitive is not in the set, it's a new primitive
-			if (!lastRenderHashes.has(currPrimitive.hash())) {
-				newPrimitives.push(currPrimitive);
-			}
-		}
-
-		return newPrimitives;
-	}
-
 	private validateTreeLocation(
 		loc: Point,
 		quadTree: Quadtree,
@@ -350,5 +335,24 @@ export default class World {
 		}
 
 		return true;
+	}
+
+	private getNewPrimitivesSinceLastRender<PrimitiveType extends Primitive>(
+		currPrimitives: PrimitiveType[],
+		lastRenderPrimitives: PrimitiveType[]
+	): PrimitiveType[] {
+		let newPrimitives: PrimitiveType[] = [];
+
+		// Create a set with the hashes of the lastRenderPrimitives
+		let lastRenderHashes = new Set(lastRenderPrimitives.map((p) => p.hash()));
+
+		for (const currPrimitive of currPrimitives) {
+			// If the hash of the current primitive is not in the set, it's a new primitive
+			if (!lastRenderHashes.has(currPrimitive.hash())) {
+				newPrimitives.push(currPrimitive);
+			}
+		}
+
+		return newPrimitives;
 	}
 }

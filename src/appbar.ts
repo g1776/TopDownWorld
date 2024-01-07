@@ -28,7 +28,7 @@ export default class Appbar {
 		);
 		console.log(response);
 		if (!response) return;
-		this.editors.forEach((editor) => editor.dispose(false));
+		this.editors.forEach((editor) => editor.dispose());
 	}
 
 	private toggleTrees(enabled: boolean) {
@@ -95,6 +95,8 @@ export default class Appbar {
 		this.addClickListener("action-btn-save", this.save);
 		this.addClickListener("mode-btn-graph", () => this.setEditorMode(EditorMode.GRAPH));
 		this.addClickListener("mode-btn-stop", () => this.setEditorMode(EditorMode.STOP));
+		this.addClickListener("mode-btn-crossing", () => this.setEditorMode(EditorMode.CROSSING));
+		this.addClickListener("mode-btn-start", () => this.setEditorMode(EditorMode.START));
 		this.addClickListener("mode-btn-view-only", () =>
 			this.setEditorMode(EditorMode.VIEW_ONLY)
 		);

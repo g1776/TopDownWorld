@@ -98,6 +98,10 @@ export function translate(loc: Point, angle: number, offset: number): Point {
 	return new Point(loc.x + Math.cos(angle) * offset, loc.y + Math.sin(angle) * offset);
 }
 
+export function perpendicular(p: Point): Point {
+	return new Point(-p.y, p.x);
+}
+
 /**
  *
  * @param p

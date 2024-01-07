@@ -1,26 +1,22 @@
 import { EditorMode } from "../enums";
-import Stop from "../markings/stop";
+import Crossing from "../markings/crossing";
 import { Point } from "../primitives";
-import { getNearestSegment } from "../math/utils";
 import Editor from "interfaces/editor";
 import Viewport from "viewport";
 import World from "world";
 import Marking from "interfaces/marking";
 import MarkingEditor from "./markingEditor";
 
-export default class StopEditor extends MarkingEditor {
-	public readonly type: EditorMode = EditorMode.STOP;
+export default class CrossingEditor extends MarkingEditor {
+	public readonly type: EditorMode = EditorMode.CROSSING;
 
 	constructor(public viewport: Viewport, public world: World) {
-		super(viewport, world, world.laneGuides);
+		super(viewport, world, world.graph.segments);
 	}
 
 	override createMarking(center: Point, directionVector: Point): Marking {
-		return new Stop(
-			center,
-			directionVector,
-			this.world.roadWidth / 2,
-			this.world.roadWidth / 2
-		);
+		const width = this.world.roadWidth;
+		const height = this.world.roadWidth / 2;
+		return new Crossing(center, directionVector, width, height);
 	}
 }
