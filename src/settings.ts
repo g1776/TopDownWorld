@@ -1,6 +1,6 @@
 export default class Settings {
 	// Program settings
-	public static readonly DEBUG: boolean = true;
+	public static readonly DEBUG: boolean = false;
 	public static readonly FLOATING_POINT_PRECISION: number = 3;
 
 	// Editor settings
@@ -9,6 +9,9 @@ export default class Settings {
 	 * The default zoom level for the editor. Higher values are less zoomed in.
 	 */
 	public static readonly EDITOR_DEFAULT_ZOOM: number = 2;
+
+	// World settings
+	public static readonly WORLD_SIZE: number = 10000;
 
 	// Road settings
 	public static readonly ROAD_WIDTH: number = 100;

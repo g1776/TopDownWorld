@@ -20,9 +20,15 @@ export default class World {
 	laneGuides: Segment[] = [];
 	private treesEnabled = false;
 
+	/**
+	 * A [Quadtree](https://jimkang.com/quadtreevis/), used for efficiently determining nearby buildings for tree placement
+	 */
+	private buildingQuads: Quadtree;
+
 	constructor(
 		public graph: Graph,
 		public title = "My World",
+		public worldSize = Settings.WORLD_SIZE,
 		public roadWidth = Settings.ROAD_WIDTH,
 		public roadRoundness = Settings.ROAD_ROUNDNESS,
 
@@ -44,6 +50,13 @@ export default class World {
 	) {
 		this.roads = [];
 		this.roadBorders = [];
+
+		this.buildingQuads = new Quadtree({
+			x: 0,
+			y: 0,
+			width: worldSize,
+			height: worldSize,
+		});
 
 		this.generate();
 	}
@@ -79,19 +92,6 @@ export default class World {
 		this.generate();
 	}
 
-	generate() {
-		this.roads.length = 0;
-
-		for (const seg of this.graph.segments) {
-			this.roads.push(new Road(seg, this.roadWidth, this.roadRoundness));
-		}
-
-		this.roadBorders = Polygon.union(this.roads.map((road) => road.base));
-		this.buildings = this.generateBuildings();
-		this.trees = this.treesEnabled ? this.generateTrees() : [];
-		this.laneGuides = this.generateLaneGuides();
-	}
-
 	draw(ctx: CanvasRenderingContext2D, viewPoint: Point) {
 		this.roads.forEach((road) => road.draw(ctx));
 
@@ -107,6 +107,27 @@ export default class World {
 			.forEach((item) => {
 				item.draw(ctx, viewPoint);
 			});
+	}
+
+	generate() {
+		// clear the illegal polys quadtree
+		this.buildingQuads.clear();
+
+		this.roads = this.generateRoads();
+		this.roadBorders = Polygon.union(this.roads.map((road) => road.base));
+		this.buildings = this.generateBuildings();
+		this.trees = this.treesEnabled ? this.generateTrees() : [];
+		this.laneGuides = this.generateLaneGuides();
+	}
+
+	private generateRoads(): Road[] {
+		const newRoads: Road[] = [];
+		for (const seg of this.graph.segments) {
+			const road = new Road(seg, this.roadWidth, this.roadRoundness);
+			newRoads.push(road);
+		}
+
+		return newRoads;
 	}
 
 	private generateBuildings(): Building[] {
@@ -188,7 +209,18 @@ export default class World {
 			});
 		});
 
-		return bases.map((b) => new Building(b));
+		return bases.map((base) => {
+			// Create an entry in the illegal polys quadtree for each base
+			const bb = base.getBoundingBox();
+			this.buildingQuads.insert({
+				x: (bb.minX + bb.maxX) / 2,
+				y: (bb.minY + bb.maxY) / 2,
+				width: bb.maxX - bb.minX,
+				height: bb.maxY - bb.minY,
+			});
+
+			return new Building(base);
+		});
 	}
 
 	private generateTrees(): Tree[] {
@@ -197,10 +229,9 @@ export default class World {
 		}
 
 		// We dont want to generate trees on the road or in buildings
-		const illegalPolys = [
-			...this.buildings.map((b) => b.base),
-			...this.roads.map((road) => road.base),
-		];
+		const buildingBases = this.buildings.map((b) => b.base);
+		const roadBases = this.roads.map((road) => road.base);
+		const illegalPolys = [...buildingBases, ...roadBases];
 
 		// calcualte the bounds to generate trees in
 		let minX: number, maxX: number, minY: number, maxY: number;
@@ -214,7 +245,7 @@ export default class World {
 		});
 
 		const newTrees = [];
-		const quadTree = new Quadtree({
+		const treeQuads = new Quadtree({
 			x: 0,
 			y: 0,
 			width: maxX - minX,
@@ -228,12 +259,12 @@ export default class World {
 			// generate a random point in the bounds
 			const p = new Point(lerp(minX, maxX, Math.random()), lerp(minY, maxY, Math.random()));
 
-			const validTreeLocation = this.validateTreeLocation(p, quadTree, illegalPolys);
+			const validTreeLocation = this.validateTreeLocation(p, treeQuads, roadBases);
 
 			if (validTreeLocation) {
 				const newTree = new Tree(p, this.treeRadius, this.treeHeight);
 				newTrees.push(newTree);
-				quadTree.insert({
+				treeQuads.insert({
 					x: p.x,
 					y: p.y,
 					width: this.treeRadius * 2,
@@ -300,20 +331,17 @@ export default class World {
 		return newPrimitives;
 	}
 
-	private validateTreeLocation(
-		loc: Point,
-		quadTree: Quadtree,
-		illegalPolys: Polygon[]
-	): boolean {
+	private validateTreeLocation(loc: Point, quadTree: Quadtree, roadBases: Polygon[]): boolean {
 		// make sure the tree is not too close to another tree
 		// We use a quadtree to not have to check every tree
 		let tooCloseToAnotherTree = false;
-		const nearbyTrees = quadTree.retrieve({
+		const treeRect = {
 			x: loc.x,
 			y: loc.y,
 			width: this.treeRadius * 2,
 			height: this.treeRadius * 2,
-		});
+		};
+		const nearbyTrees = quadTree.retrieve(treeRect);
 		for (const treeRect of nearbyTrees) {
 			if (distance(new Point(treeRect.x, treeRect.y), loc) < this.treeRadius) {
 				tooCloseToAnotherTree = true;
@@ -327,6 +355,26 @@ export default class World {
 		// make sure the tree is not inside an illegal poly
 		let insideIllegalPoly = false;
 		const treeBase = new Tree(loc, this.treeRadius, this.treeHeight).base;
+
+		// construct a polygon from the building rectangles found from the quadtree
+		const buildingPolys = this.buildingQuads
+			.retrieve(treeRect)
+			.map(
+				(buildingRect) =>
+					new Polygon([
+						new Point(buildingRect.x, buildingRect.y),
+						new Point(buildingRect.x + buildingRect.width, buildingRect.y),
+						new Point(
+							buildingRect.x + buildingRect.width,
+							buildingRect.y + buildingRect.height
+						),
+						new Point(buildingRect.x, buildingRect.y + buildingRect.height),
+					])
+			);
+
+		// reconstruct a subset of the illegal polygons used in generateTrees, but only including the buildings from the quadtree query
+		const illegalPolys = [...roadBases, ...buildingPolys];
+
 		for (const poly of illegalPolys) {
 			if (poly.intersectsPoly(treeBase) || treeBase.containedByPoly(poly)) {
 				insideIllegalPoly = true;
